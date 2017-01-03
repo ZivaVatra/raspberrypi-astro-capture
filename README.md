@@ -20,26 +20,24 @@ Most professional astrophotographers have moved onto DSLRs, but they are not che
 Furthermore DSLRs do not lend themselves well to modication for further noise reduction. It is a brave (or very rich) soul that will take apart their DSLR to try to remove the infrared filter, or attempt some sort of active cooling. 
 
 In pursuit of this, the goals of the software are:
-	- to capture RAW images from the camera
-	- to provide an interface to allow the end user to download captures straight to their processing machine.
-	- to provide an interface to set/get the camera capture settings. 
+* to capture RAW images from the camera
+* to provide an interface to allow the end user to download captures straight to their processing machine.
+* to provide an interface to set/get the camera capture settings. 
 
 # Sensors
 
 So, these are the two camera modules. Both are 1/4inch CMOS sensors. 
 
-- Omnivision OV5647 (Raspberry pi v1 camera module)
-
-* Fixed focus lens
-* Max 2592 x 1944px resolution (~5 MegaPixels)
+* Omnivision OV5647 (Raspberry pi v1 camera module)
+	* Fixed focus lens
+	* Max 2592 x 1944px resolution (~5 MegaPixels)
 
 This is the first module, and the one I have. I have both the NoIR and standard version of this. For now I will stick with the standard version. 
 
-- Sony IMX219 (Raspberry pi v2 camera module)
-
-* Fixed focus lens. 
-* Max 3280 x 2464px resolution (~8 MegaPixels),
-* Supposedly has great improvement in colour and contrast, along with better performance in low light conditions
+* Sony IMX219 (Raspberry pi v2 camera module)
+	* Fixed focus lens. 
+	* Max 3280 x 2464px resolution (~8 MegaPixels),
+	* Supposedly has great improvement in colour and contrast, along with better performance in low light conditions
 
 This is the new module, with the Sony sensor. Sony are well known for decent sensors, so would be good to do a comparison. I haven't had a chance to use one of these yet.
 
@@ -51,13 +49,11 @@ The software is split into a client/server architecture. The server in this cont
 The API is JSON based, and involves a basic RPC implementation that allows to to both do single and batch RAW capture and download to the target.
 
 
-- Single capture mode:
+* Single capture mode:
+	* One shot is taken, saved to RAM (tmpfs), then sent directly to the client
 
-One shot is taken, saved to RAM (tmpfs), then sent directly to the client
-
-- Multi capture mode:
-
-You request $x number of captures. The pi will capture and store each image on its SD card. It will then forward these as a batch when captures are done. 
+* Multi capture mode:
+	* You request $x number of captures. The pi will capture and store each image on its SD card. It will then forward these as a batch when captures are done. 
 
 This is faster, because there is no pause as each RAW image (around 25MB) is sent to the client, but takes up local space. 
 
@@ -70,3 +66,13 @@ No known bugs atm, but I am sure some will be found with testing. I fixed a fair
 # TODO
 
 Switch to a multithreaded/multiprocess arch. modern PI's have quad cores, so in theory we could be sending one photo down the line while another is being taken. This would make the multi-capture mode faster, as you can transfer and capture, rather than have to transfer it all as a batch at the end. 
+
+# Usage
+
+So, the "rasbpi" folder goes on the raspberry pi, and you run "python ./imageServer.py" on the pi. This should respond with "Socket now listening". 
+
+On your client, you can run "python ./capture.py $number_of_images_to_capture". And that is it. 
+
+# Writing your own interface. 
+
+The interface is JSON, and rather simple. Look at the capture.py for how to interact with it. I intend to provide this is a library eventually for use. 
