@@ -23,9 +23,19 @@ sock.connect(("astrocam", 3777))
 
 
 def recv(verbose=False):
-    data = sock.recv(1)
+    def fetch(bytes):
+        while 1:
+            try:
+                data = sock.recv(bytes)
+            except socket.timeout:
+                continue
+            else:
+                break
+        return data
+
+    data = fetch(1)
     while data[-1] != '\0':
-        data += sock.recv(1)
+        data += fetch(1)
     try:
         size = int(data.rstrip('\0'))
     except ValueError as e:
@@ -41,7 +51,7 @@ def recv(verbose=False):
 
     length = 0
     while length < size:
-        data += sock.recv(chunk)
+        data += fetch(chunk)
         length = len(data)
         if verbose:
             if (length % 1024) == 0:
