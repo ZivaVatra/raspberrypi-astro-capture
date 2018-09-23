@@ -64,12 +64,12 @@ In addition, you can get the current settings of the camera, and set your own ca
 
 So, the "rasbpi" folder goes on the raspberry pi, and you run "python ./imageServer.py" on the pi. This should respond with "Socket now listening". 
 
-On your client, you can run "python ./capture.py $number_of_images_to_capture". And that is it. 
+On your client, you can run "python ./capture.py $hostname/$IP_ADDRESS $number_of_images_to_capture $shutter_speed". $shutter_speed is how long to keep the shutter open, in seconds
 
 For example, with the server running:
 
 [code]
-$ python ./capture.py  2
+$ python ./capture.py  astrocam 1 2 6
 Ready status received. Commencing image capture
 Waiting. Worst case estimate 0.4 minutes for capture to complete.
 Receiving file of 48257554 bytes
