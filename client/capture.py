@@ -19,7 +19,7 @@ import time
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.settimeout(600)
-sock.connect(("astrocam", 3777))
+sock.connect((sys.argv[1], 3777))
 
 
 def recv(verbose=False):
@@ -77,10 +77,11 @@ while 1:
 
     # And we are ready, begin!
     print "Ready status received. Commencing image capture"
+    # shutter speed is in microseconds, so we multiply by a million for seconds
     sock.send(cPickle.dumps({"COMMAND": "capture", "ARGS": [
-        int(sys.argv[1]), {
+        int(sys.argv[2]), {
             "captureSettings": {
-                "--shutter": 6000000,
+                "--shutter": float(sys.argv[3]) * 1000000.0,
                 "--awb": "horizon"
             }
         }
@@ -90,10 +91,10 @@ while 1:
     # The timeout is the shutter speed (Seconds) * 2 * numberof images.
     # So we don't time out
     # waiting for capturing to finish
-    wait = 2 * 6 * int(sys.argv[1])
+    wait = int(sys.argv[3]) * 2 * int(sys.argv[2])
     sock.settimeout(wait)
-    print "Waiting. Worst case estimate %.1d minutes for capture to complete."\
-        % (wait / 60.0)
+    print "Waiting. Worst case estimate %d seconds (%.1f minutes) for capture to complete."\
+        % (wait, (wait / 60.0))
 
     response = cPickle.loads(recv(True))
     if response['STATUS'] != "OK":
