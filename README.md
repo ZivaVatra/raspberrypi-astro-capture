@@ -68,7 +68,7 @@ On your client, you can run "python ./capture.py $hostname/$IP_ADDRESS $number_o
 
 For example, with the server running:
 
-[code]
+<pre>
 $ python ./capture.py  astrocam 1 2 6
 Ready status received. Commencing image capture
 Waiting. Worst case estimate 0.4 minutes for capture to complete.
@@ -78,7 +78,7 @@ Writing out JPG image 1 of 2
 6548562 bytes written to file
 Writing out JPG image 2 of 2
 6549686 bytes written to file
-[/code]
+</pre>
 
 
 The files follow a name template of "astroimage00000_$DATE.jpg". They look like this:
