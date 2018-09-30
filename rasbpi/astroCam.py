@@ -1,40 +1,28 @@
 #!/usr/bin/python
-# vim: ts=4 expandtab ai 
 # -*- coding: utf-8 -*-
+# vim: ts=4 expandtab ai
 #
 # File Created: Tue  1 Nov 08:21:44 GMT 2016
-# Copyright 2016 
+# Copyright 2016
 #
 # All rights reserved
 #
-#=============================================================|
+#  ===========================================================|
 
 import subprocess as sp
 import os
 import time
 
-__VERSION__ = (0,0,1)
 
 class astroCam(object):
     def __init__(self):
-        #Default parameters for raspistill
-        self.params = { 
-        "captureSettings": {
-             "-n": None,
-             "-ISO": 800,
-             "-r": None,
-             "--shutter": 6000000,
-             "-ex":"verylong",
-             "--mode": 3,
-             "--metering": "matrix",
-             "--awb":"off",
-             }
-         }
+        # Default parameters for raspistill
+        self.params = {
+            "cameraopts": "ISO=800,shutter=6000000,exposure=verylong,metering=matrix,awb=off,raw",
+        }
 
-    def _takeShot(self,outP=None):
+    def _takeShot(self, outP=None):
         ''' Internal function that actually takes the image and returns the data '''
-        # No mater what the user specifies, these options have to be overriden
-        # otherwise the system will not work
 
         # As we will only ever store one image at a time here, and the images
         # (jpg + RAW) don't exceed 12MB, we use tmpfs (RAMdisk) to save the flash
@@ -44,39 +32,34 @@ class astroCam(object):
         else:
             sendData = False
 
-        self.params['captureSettings'].update( { 
-            "-e":"jpg", 
-            "-q":100, 
-            "-r": None,
-            "-o": outP,
-            }
-        )
+        cameraopts = self.params['cameraopts'].split(',')
 
-        def f(x):
-            if self.params['captureSettings'][x] == None: self.params['captureSettings'][x] = ""
-            return "%s %s" % (x, self.params['captureSettings'][x])
+        # No matter what the user specifies, these options have to be added
+        # otherwise the system will not work. In theory appending this to the end
+        # of the cmd list should mean it takes precedence over earlier (user submitted)
+        # entries.
+        cameraopts.extend[
+            "encoding=jpg",
+            "quality=100",
+            "nopreview",
+            "output=%s" % outP,
+        ]
 
-        #print "DEBUG: %s" % self.params 
-        print "DEBUG: raspistill %s" % ' '.join(map(f, self.params["captureSettings"]))
-        sp.check_call("raspistill %s" % ' '.join(map(f, self.params["captureSettings"])), shell=True )
+        cmd = ["raspistill"]
+        cmd.extend(["--%s" % x for x in self.params['cameraopts']])
+        print "Debug: %s" % ' '.join(cmd)
+        sp.check_call(cmd)
 
-        if os.path.exists(outP) == False:
+        if os.path.exists(outP) is False:
             raise(IOError("Output file not written. Something went wrong with image capture"))
 
-        #Now read in the file we created
-        if sendData == True:
-            fd = open(outP,'rb')
-            data = fd.read() #until done
-            fd.close()
-            os.unlink(outP) #Remove the tmpfile
-            return sendData
-        return True
+        return sendData
 
     def capture(self, shots, params={}):
-        ''' Takes one or more shots in succession, useful if you intend to do 
+        ''' Takes one or more shots in succession, useful if you intend to do
         image stacking.
 
-        shots is non zero int, telling how many shots to take. 
+        shots is non zero int, telling how many shots to take.
         Returns struct with data.
 
         '''
@@ -93,51 +76,40 @@ class astroCam(object):
         # TODO: Get memory of device, and divide by 25942936 (25MB) to give number of
         #       shots we can keep in memory
         if shots > 3:
-            lowMem = True 
+            lowMem = True
         else:
             lowMem = False
 
         x = 0
         images = []
         while x != shots:
-#            image = self._takeShot()
             if lowMem:
                 fn = "/tmp/temp%05d.jpg" % x
-                if not self._takeShot(fn): 
+                if not self._takeShot(fn):
                     raise(StandardError("ERROR: Could not capture image %d" % x))
                 images.append(fn)
             else:
                 self._takeShot("/imagetmp/cam.jpg")
-                fd = open("/imagetmp/cam.jpg", 'rb')
-                image = fd.read()
-                fd.close()
+                with open("/imagetmp/cam.jpg", 'rb') as fd:
+                    image = fd.read()
                 os.unlink("/imagetmp/cam.jpg")
                 images.append(image)
-                image = None #Free space
+                image = None  # Free space
             x += 1
 
         if lowMem:
-             return {
+            return {
                 "TIMESTAMP": time.time(),
                 "PARAMS": self.params,
                 "PATHSET": images,
             }
-        else:          
+        else:
             return {
                 "TIMESTAMP": time.time(),
                 "PARAMS": self.params,
                 "IMAGES": images,
             }
 
-    def setParams(self, params):
-        ''' Sets the parameters for image capture (raspistill), given as a dict of 
-            "switch":value  (e.g. { "-ISO": 800  ) ). For switches with no value use "" or None '''
-
-        self.params.update(params)
-
-    def getParams(self):
-        ''' Return current parameters for raspistill '''
-        return self.params
 
 if __name__ == "__main__":
     print "Testing Image capture and storage"
@@ -148,5 +120,3 @@ if __name__ == "__main__":
         print "All good. Got %d bytes of data from camera" % size
     else:
         print "Something went wrong, we got undefined image eize %d" % size
-
-

@@ -17,6 +17,15 @@ import sys
 import datetime
 import time
 
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option(
+    "-c", "--cameraopts", dest="cameraopts",
+    help="options to pass to camera")
+
+
+
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.settimeout(600)
 sock.connect((sys.argv[1], 3777))
