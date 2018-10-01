@@ -28,9 +28,6 @@ class astroCam(object):
         # (jpg + RAW) don't exceed 12MB, we use tmpfs (RAMdisk) to save the flash
         if not outP:
             outP = "/imagetmp/cam.jpg"
-            sendData = True
-        else:
-            sendData = False
 
         cameraopts = self.params['cameraopts'].split(',')
 
@@ -52,8 +49,6 @@ class astroCam(object):
 
         if os.path.exists(outP) is False:
             raise(IOError("Output file not written. Something went wrong with image capture"))
-
-        return sendData
 
     def capture(self, shots, params):
         ''' Takes one or more shots in succession, useful if you intend to do
@@ -84,8 +79,7 @@ class astroCam(object):
         while x != shots:
             if lowMem:
                 fn = "/tmp/temp%05d.jpg" % x
-                if not self._takeShot(fn):
-                    raise(StandardError("ERROR: Could not capture image %d" % x))
+                self._takeShot(fn)
                 images.append(fn)
             else:
                 self._takeShot("/imagetmp/cam.jpg")
