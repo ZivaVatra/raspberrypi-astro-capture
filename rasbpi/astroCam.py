@@ -18,7 +18,7 @@ class astroCam(object):
     def __init__(self):
         # Default parameters for raspistill
         self.params = {
-            "cameraopts": "ISO=800,shutter=6000000,exposure=verylong,metering=matrix,awb=off,raw",
+             "cameraopts": ""
         }
 
     def _takeShot(self, outP=None):
@@ -28,9 +28,6 @@ class astroCam(object):
         # (jpg + RAW) don't exceed 12MB, we use tmpfs (RAMdisk) to save the flash
         if not outP:
             outP = "/imagetmp/cam.jpg"
-            sendData = True
-        else:
-            sendData = False
 
         cameraopts = self.params['cameraopts'].split(',')
 
@@ -38,24 +35,22 @@ class astroCam(object):
         # otherwise the system will not work. In theory appending this to the end
         # of the cmd list should mean it takes precedence over earlier (user submitted)
         # entries.
-        cameraopts.extend[
+        cameraopts.extend([
             "encoding=jpg",
             "quality=100",
             "nopreview",
             "output=%s" % outP,
-        ]
+        ])
 
         cmd = ["raspistill"]
-        cmd.extend(["--%s" % x for x in self.params['cameraopts']])
+        cmd.extend(["--%s" % x.replace('=',' ') for x in cameraopts])
         print "Debug: %s" % ' '.join(cmd)
-        sp.check_call(cmd)
+        sp.check_call(' '.join(cmd), shell=True)
 
         if os.path.exists(outP) is False:
             raise(IOError("Output file not written. Something went wrong with image capture"))
 
-        return sendData
-
-    def capture(self, shots, params={}):
+    def capture(self, shots, params):
         ''' Takes one or more shots in succession, useful if you intend to do
         image stacking.
 
@@ -64,8 +59,8 @@ class astroCam(object):
 
         '''
 
-        for key in params:
-            self.params[key].update(params[key])
+        s_ts = time.time()
+        self.params = params
 
         # The rasberryPi has too little ram to hold lots of RAW images in memory
         # so if more than 3 shots are requested, we use the low memory method.
@@ -85,8 +80,7 @@ class astroCam(object):
         while x != shots:
             if lowMem:
                 fn = "/tmp/temp%05d.jpg" % x
-                if not self._takeShot(fn):
-                    raise(StandardError("ERROR: Could not capture image %d" % x))
+                self._takeShot(fn)
                 images.append(fn)
             else:
                 self._takeShot("/imagetmp/cam.jpg")
@@ -97,17 +91,21 @@ class astroCam(object):
                 image = None  # Free space
             x += 1
 
+        e_ts = time.time()
+
         if lowMem:
             return {
                 "TIMESTAMP": time.time(),
                 "PARAMS": self.params,
                 "PATHSET": images,
+                "EXECTIME": (e_ts - s_ts)
             }
         else:
             return {
                 "TIMESTAMP": time.time(),
                 "PARAMS": self.params,
                 "IMAGES": images,
+                "EXECTIME": (e_ts - s_ts)
             }
 
 

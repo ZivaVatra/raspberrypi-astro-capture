@@ -9,7 +9,7 @@
 #
 #=============================================================|
 
-__VERSION__ = (0,0,1)
+__PVERSION__ = (0,2) # protocol version
 __NAME__ = "AstroCam"
 
 import socket
@@ -30,9 +30,7 @@ asc = astroCam()
 #Generate the function table of pub functions to be exposed
 # The 'A\d' at the end indicates we need 1+ args
 funcTable = {
-    'getParams': asc.getParams,
     'capture': asc.capture,
-    'setParams': asc.setParams,
     }
 
 import cPickle
@@ -45,7 +43,15 @@ def clientthread(conn):
             conn.sendall(msg)
         except socket.error as e:
             print "Got socket Error: %s - Terminating child" % e.message
+            conn.close()
             raise(SystemExit()) #End Thread. While technically a thread you exit like a process
+
+
+    def sendError(msg, terminate=False):
+        send(cPickle.dumps({'STATUS':'ERROR', 'MSG':str(msg).upper()}))
+        conn.close()
+        if terminate:
+            raise(SystemExit())
 
     def sendData(data):
         message = ""
@@ -53,24 +59,28 @@ def clientthread(conn):
             message = cPickle.dumps( {'STATUS':'OK', 'DATA': data  } )
         except Exception as e:
             print "Got Error: %s" % e.message
-            send(cPickle.dumps({'STATUS':'ERROR', 'MSG':'GOT INTERNAL ERROR: "%s"' % e.message }))
+            sendError('GOT INTERNAL ERROR: "%s"' % e.message)
             return None
         send(message) #We send the data
- 
+
     #send welcome message
-    send(cPickle.dumps([__NAME__,__VERSION__, "READY"]))
+    send(cPickle.dumps([__NAME__,__PVERSION__, "READY"]))
   
     while True:
-        data = conn.recv(1024) #the command message should never hit 1KB, let alone more
+        try:
+            data = conn.recv(1024) #the command message should never hit 1KB, let alone more
+        except Exception as e:
+            sendError(e, True) # Terminate after error
+
         data = data.strip()
         if not data: 
-            send(cPickle.dumps({'STATUS':'ERROR', 'MSG':'COMMAND INPUT NOT VALID'}))
+            sendError('COMMAND INPUT NOT VALID')
             continue #if we break, the socket connection is terminated, so we always continue 
         try:
             data = cPickle.loads(data) 
         except ValueError as e:
-            send(cPickle.dumps({'STATUS':'ERROR', 'MSG':'COMMAND INPUT NOT PARSABLE'}))
-            print "Got Error: %s" % e.message
+            print "Caught Error: %s" % e.message
+            sendError('COMMAND INPUT NOT PARSABLE')
             continue
 
         # Check if valid COMMAND, and attempt to execute
@@ -79,8 +89,18 @@ def clientthread(conn):
                 sendData(asc.setParams( *data['ARGS']))
                 continue 
             elif data['COMMAND'] == "capture":
-                print "Called multishot, have data"
-                data =  asc.capture( *data['ARGS'])
+                attempts = 3
+                while (1):
+                    try:
+                        data =  asc.capture( *data['ARGS'])
+                    except StandardError as e:
+                        if attempts != 0:
+                            print "Failed capture. Trying again."
+                        else:
+                            sendError(e, True) # We give up. Terminate execution
+                    else:
+                        break
+                    attempts -= 1
                 try:
                     # If we have "PATHSET" it means we could not store all the images in 
                     # RAM, so had to write them to disk. Different method of sending images
@@ -103,14 +123,14 @@ def clientthread(conn):
             else:
                 data = funcTable[data['COMMAND']]()
         except KeyError as e:
-            send(cPickle.dumps({'STATUS':'ERROR', 'MSG':'NO VALID COMMAND KEY'}))
+            sendError('NO VALID COMMAND KEY')
             print "Got Error: %s" % e
             continue
         except ValueError as e:
-            send(cPickle.dumps({'STATUS':'ERROR', 'MSG':'COMMAND KEY "%s" not in call table' % data['COMMAND'] }))
+            sendError('COMMAND KEY "%s" not in call table' % data['COMMAND'])
             print "Got Error: %s" % e.message
         except subprocess.CalledProcessError as e:
-            send(cPickle.dumps({'STATUS':'ERROR', 'MSG': e.message.strip() }))
+            sendError("Process: " + e.message.strip())
             print "Got Error: %s" % e.message
 
 
