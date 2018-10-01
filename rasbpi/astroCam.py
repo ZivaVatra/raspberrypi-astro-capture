@@ -59,6 +59,7 @@ class astroCam(object):
 
         '''
 
+        s_ts = time.time()
         self.params = params
 
         # The rasberryPi has too little ram to hold lots of RAW images in memory
@@ -90,17 +91,21 @@ class astroCam(object):
                 image = None  # Free space
             x += 1
 
+        e_ts = time.time()
+
         if lowMem:
             return {
                 "TIMESTAMP": time.time(),
                 "PARAMS": self.params,
                 "PATHSET": images,
+                "EXECTIME": (e_ts - s_ts)
             }
         else:
             return {
                 "TIMESTAMP": time.time(),
                 "PARAMS": self.params,
                 "IMAGES": images,
+                "EXECTIME": (e_ts - s_ts)
             }
 
 

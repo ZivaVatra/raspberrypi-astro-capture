@@ -89,7 +89,6 @@ def clientthread(conn):
                 sendData(asc.setParams( *data['ARGS']))
                 continue 
             elif data['COMMAND'] == "capture":
-                print "Called multishot, have data"
                 attempts = 3
                 while (1):
                     try:
