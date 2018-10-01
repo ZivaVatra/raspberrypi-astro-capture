@@ -19,16 +19,23 @@ import time
 
 from optparse import OptionParser
 
-parser = OptionParser()
+usage = "usage: %prog [options] $number_of_shots_to_capture "
+parser = OptionParser(usage)
 parser.add_option(
     "-c", "--cameraopts", dest="cameraopts",
-    help="options to pass to camera")
+    help="options to pass to camera. Any raspistill long option, comma seperated ")
+parser.add_option(
+    "-H", "--hostname", dest="hostname", default="localhost",
+    help="server hostname"
+)
 
-
+(options, args) = parser.parse_args()
+if len(args) != 1:
+    parser.error("incorrect number of arguments")
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.settimeout(600)
-sock.connect((sys.argv[1], 3777))
+sock.connect((options.hostname, 3777))
 
 
 def recv(verbose=False):
@@ -86,26 +93,33 @@ while 1:
 
     # And we are ready, begin!
     print "Ready status received. Commencing image capture"
-    # shutter speed is in microseconds, so we multiply by a million for seconds
-    sock.send(cPickle.dumps({"COMMAND": "capture", "ARGS": [
-        int(sys.argv[2]), {
-            "captureSettings": {
-                "--shutter": float(sys.argv[3]) * 1000000.0,
-                "--awb": "horizon"
-            }
-        }
-    ]
-    }))
 
-    # The timeout is the shutter speed (Seconds) * 2 * numberof images.
+    # shutter speed is in microseconds, so we extract, and multiply by a million for seconds
+    camera_opts = options.cameraopts.split(',')
+    shutter_speed = filter(lambda x: x.startswith("shutter"), camera_opts)
+    assert len(shutter_speed) == 1, "Failed to get shutter speed. got: %s" % ','.join(shutter_speed)
+    shutter_speed = shutter_speed[0].split('=')[-1]
+    camera_opts = filter(lambda x: not x.startswith("shutter"), camera_opts)
+    camera_opts.append("shutter=%d" % int((float(shutter_speed) * 1000000.0)))
+
+    sock.send(cPickle.dumps({"COMMAND": "capture", "ARGS": [
+        int(args[0]), {
+            "cameraopts": ','.join(camera_opts)
+        }
+    ]}))
+
+    # The timeout is the shutter speed (Seconds) * numberof images * 10.
     # So we don't time out
-    # waiting for capturing to finish
-    wait = int(sys.argv[3]) * 2 * int(sys.argv[2])
+    # waiting for capturing to finish. It takes around 10 secons to capture and write
+    # to card of a 1 second photo, so we multiply
+    wait = float(shutter_speed) * int(args[0]) * 10 * 3
+
     sock.settimeout(wait)
-    print "Waiting. Worst case estimate %d seconds (%.1f minutes) for capture to complete."\
+    print "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."\
         % (wait, (wait / 60.0))
 
     response = cPickle.loads(recv(True))
+    print "Finished. Execution took %d seconds" % response["DATA"]["EXECTIME"]
     if response['STATUS'] != "OK":
         print "ERROR, Did not get image data. Got following error:\n%s" % \
             response['MSG']
