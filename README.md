@@ -26,8 +26,7 @@ In future it would be nice to provide a simple rasbpi image that you can just st
 
 # Sensors
 
-Back in 2016 or so, when I started this project. There were the two camera modules. Both are 1/4inch CMOS sensors. 
-
+Back in 2016 or so, when I published this project. There were the two camera modules. Both are 1/4inch CMOS sensors. 
 * Omnivision OV5647 (Raspberry pi v1 camera module)
 	* Fixed focus lens
 	* Max 2592 x 1944px resolution (~5 MegaPixels)
@@ -64,34 +63,64 @@ In addition, you can get the current settings of the camera, and set your own ca
 
 So, the "rasbpi" folder goes on the raspberry pi, and you run "python ./imageServer.py" on the pi. This should respond with "Socket now listening". 
 
-On your client, you can run "python ./capture.py $hostname/$IP_ADDRESS $number_of_images_to_capture $shutter_speed". $shutter_speed is how long to keep the shutter open, in seconds
+On your client, you can run "python ./capture.py -h" for a full help output, including options you can specify. The positional argument is the number of shots you wish to take. 
 
-For example, with the server running:
+At the moment there is no maximum number of shots. There are two modes, "normal" and "lowmem". In normal mode the capture data is kept in RAM and sent back along with the response. However if you want to take a batch of more photos than can fit in RAM, than "lowmem" mode is automatically activated (based on pi available RAM and average image size). In this mode the image data is written to the pi SD card, then at the end of the capture, it is all sent to the client. "lowmem" mode is slower (and wears out the SD card by using it as disk cache), but it allows you to capture far more shots than the normal "in memory" mode. 
+
+Therefore the only limitation on the number of shots that can be taken in a batch, is the amount of space on the SD card. On average, rasbpi images are 25MB (at least with my sensor), so even a "small" 4gb card should be able to do a good 100 shot batch. 
+
+The camera options are forwarded directly to raspistill, with a bit of parsing. Note that unlike raspistill, the shutter speed is in seconds, not microseconds. So for example, if you want a 1 second capture, you can use the client like so:
 
 <pre>
-$ python ./capture.py  astrocam 1 2 6
+
+$ python ./capture.py -H astrocam -c "shutter=1,ISO=100,exposure=verylong,metering=matrix,awb=off" 5
 Ready status received. Commencing image capture
-Waiting. Worst case estimate 0.4 minutes for capture to complete.
-Receiving file of 48257554 bytes
-Recieved 100% (48257554 of 48257554 bytes)
-Writing out JPG image 1 of 2
-6548562 bytes written to file
-Writing out JPG image 2 of 2
-6549686 bytes written to file
+Waiting. Estimate 50 seconds (0.8 minutes) for capture to complete.
+Receiving file of 212 bytes
+Recieved 100% (212 of 212 bytes)
+We are receiving a set of 5 images
+Receiving and writing out image 1 of 5
+Receiving file of 359619 bytes
+Recieved 100% (359619 of 359619 bytes)
+105280 bytes written to file
+Receiving and writing out image 2 of 5
+Receiving file of 359619 bytes
+Recieved 100% (359619 of 359619 bytes)
+105280 bytes written to file
+Receiving and writing out image 3 of 5
+Receiving file of 359619 bytes
+Recieved 100% (359619 of 359619 bytes)
+105280 bytes written to file
+Receiving and writing out image 4 of 5
+Receiving file of 359619 bytes
+Recieved 100% (359619 of 359619 bytes)
+105280 bytes written to file
+Receiving and writing out image 5 of 5
+Receiving file of 359619 bytes
+Recieved 100% (359619 of 359619 bytes)
+105280 bytes written to file
+</pre>
+
+The shutter supports decimals, so if you want something <1 sec, you can use decimals (e.g. 0.5 for half second). Astronomy handles long exposures more often than not, hence the decision to use seconds as the shutter base speed.
+
+The files follow a name template of "astroimage00000_$DATE.jpg". In the above example, we got the following files:
+
+<pre>
+astroimage00001_2018-10-01_11:57:01.jpg
+astroimage00002_2018-10-01_11:57:01.jpg
+astroimage00003_2018-10-01_11:57:01.jpg
+astroimage00004_2018-10-01_11:57:01.jpg
+astroimage00005_2018-10-01_11:57:01.jpg
 </pre>
 
 
-The files follow a name template of "astroimage00000_$DATE.jpg". They look like this:
-- astroimage00001_2018-09-23_22:53:40.jpg
-- astroimage00002_2018-09-23_22:53:40.jpg
-
 Note that while it says "jpg", they are in fact RAW TIFF files in a jpeg container. No idea why it is done this way, the underlying "rasbpistill" generates these files. In future I will attempt to have the software convert this to something more normal; either pure tiff, or PPM files (which in my experience, seems to be a rather popular format for astronomy software ). 
 
+# TODO
 
-# Bugs
+- Have the server take a RAW shot upon initialisation, which can be used to get an idea for the size of this sensors image size (it is currently hardcoded to 25MB based on manual tests of my sensor). Use this to calculate switching between "lowmem" and "normal" mode
 
-No known bugs atm, but I am sure some will be found with testing. I fixed a fair few myself already. The software is still Alpha. 
-
+- Using the image size data mentioned above, write some logic to calculate a maximum number of shots that can be done on the pi's current free disk space.
 
 # Writing your own interface. 
 
