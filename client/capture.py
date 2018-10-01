@@ -119,6 +119,10 @@ while 1:
         % (wait, (wait / 60.0))
 
     response = cPickle.loads(recv(True))
+    if response['STATUS'] == "ERROR":
+        sock.close()
+        raise(Exception("Caught remote error: %s" % response['MSG']))
+
     print "Finished. Execution took %d seconds" % response["DATA"]["EXECTIME"]
     if response['STATUS'] != "OK":
         print "ERROR, Did not get image data. Got following error:\n%s" % \
