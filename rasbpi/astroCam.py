@@ -42,10 +42,41 @@ class astroCam(object):
             "output=%s" % outP,
         ])
 
-        cmd = ["raspistill"]
-        cmd.extend(["--%s" % x.replace('=',' ') for x in cameraopts])
-        print "Debug: %s" % ' '.join(cmd)
-        sp.check_call(' '.join(cmd), shell=True)
+        cmd = ["/usr/bin/raspistill"]
+        for x in cameraopts:
+            if x.strip() == "":
+                continue
+            try:
+                y,z = x.split('=')
+                cmd.extend(["--" + y, z])
+            except ValueError:
+                cmd.append("--" + x)
+
+
+        print "Debug: " + ' '.join(cmd)
+        cmd_fd = sp.Popen(
+            cmd,
+            stderr = sp.PIPE,
+            stdout = sp.PIPE,
+            shell=False
+        )
+
+        (stdout, stderr) = cmd_fd.communicate()
+    
+        # Wait until termination
+        timeout = 10 * 4  # Set a timeout so we don't hang, in secs
+        while cmd_fd.poll() is None:
+            time.sleep(250)
+            timeout -= 1
+            if timeout == 0:
+                cmd_fd.Terminate()
+                raise(RuntimeError("Timout while waiting for capture to finish"))
+
+        # We are done, check return code
+        if cmd_fd.returncode != 0:
+            # We had an error, capture the output of stderr and raise
+            raise(RuntimeError("capture failure. Got error: %s" % stderr))
+        
 
         if os.path.exists(outP) is False:
             raise(IOError("Output file not written. Something went wrong with image capture"))

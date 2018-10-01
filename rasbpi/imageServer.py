@@ -130,7 +130,7 @@ def clientthread(conn):
             sendError('COMMAND KEY "%s" not in call table' % data['COMMAND'])
             print "Got Error: %s" % e.message
         except subprocess.CalledProcessError as e:
-            sendError("Process: " + e.message.strip())
+            sendError("image capture error: " + e.message.strip())
             print "Got Error: %s" % e.message
 
 
