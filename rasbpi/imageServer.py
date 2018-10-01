@@ -89,7 +89,7 @@ def clientthread(conn):
                             raise(e) # re-raise after failed attempts
                     else:
                         break
-                    attempst -= 1
+                    attempts -= 1
                 try:
                     # If we have "PATHSET" it means we could not store all the images in 
                     # RAM, so had to write them to disk. Different method of sending images
