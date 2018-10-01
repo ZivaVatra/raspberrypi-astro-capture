@@ -100,7 +100,7 @@ while 1:
     assert len(shutter_speed) == 1, "Failed to get shutter speed. got: %s" % ','.join(shutter_speed)
     shutter_speed = shutter_speed[0].split('=')[-1]
     camera_opts = filter(lambda x: not x.startswith("shutter"), camera_opts)
-    camera_opts.append("shutter=%d" % (int(shutter_speed) * 1000000))
+    camera_opts.append("shutter=%d" % int((float(shutter_speed) * 1000000.0)))
 
     sock.send(cPickle.dumps({"COMMAND": "capture", "ARGS": [
         int(args[0]), {
@@ -112,12 +112,14 @@ while 1:
     # So we don't time out
     # waiting for capturing to finish. It takes around 10 secons to capture and write
     # to card of a 1 second photo, so we multiply
-    wait = int(shutter_speed) * int(args[0]) * 10
+    wait = float(shutter_speed) * int(args[0]) * 10 * 3
+
     sock.settimeout(wait)
     print "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."\
         % (wait, (wait / 60.0))
 
     response = cPickle.loads(recv(True))
+    print "Finished. Execution took %d seconds" % response["DATA"]["EXECTIME"]
     if response['STATUS'] != "OK":
         print "ERROR, Did not get image data. Got following error:\n%s" % \
             response['MSG']
