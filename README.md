@@ -122,6 +122,10 @@ Note that while it says "jpg", they are in fact RAW TIFF files in a jpeg contain
 
 - Using the image size data mentioned above, write some logic to calculate a maximum number of shots that can be done on the pi's current free disk space.
 
+# Limitations
+
+- the raspistill program only allows shots up to a max of 6 seconds it seems. Need to see if this is a hardware limitation or just a software thing
+
 # Writing your own interface. 
 
 The interface is JSON, and rather simple. Look at the capture.py for how to interact with it. I intend to provide this is a library eventually for use. 
