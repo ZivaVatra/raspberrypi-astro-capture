@@ -108,12 +108,13 @@ while 1:
         }
     ]}))
 
-    # The timeout is the shutter speed (Seconds) * 2 * numberof images.
+    # The timeout is the shutter speed (Seconds) * numberof images * 10.
     # So we don't time out
-    # waiting for capturing to finish
-    wait = int(shutter_speed) * 2 * int(args[0])
+    # waiting for capturing to finish. It takes around 10 secons to capture and write
+    # to card of a 1 second photo, so we multiply
+    wait = int(shutter_speed) * int(args[0]) * 10
     sock.settimeout(wait)
-    print "Waiting. Worst case estimate %d seconds (%.1f minutes) for capture to complete."\
+    print "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."\
         % (wait, (wait / 60.0))
 
     response = cPickle.loads(recv(True))
