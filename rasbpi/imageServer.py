@@ -9,7 +9,7 @@
 #
 #=============================================================|
 
-__VERSION__ = (0,0,1)
+__PVERSION__ = (0,2) # protocol version
 __NAME__ = "AstroCam"
 
 import socket
@@ -30,9 +30,7 @@ asc = astroCam()
 #Generate the function table of pub functions to be exposed
 # The 'A\d' at the end indicates we need 1+ args
 funcTable = {
-    'getParams': asc.getParams,
     'capture': asc.capture,
-    'setParams': asc.setParams,
     }
 
 import cPickle
@@ -58,7 +56,7 @@ def clientthread(conn):
         send(message) #We send the data
  
     #send welcome message
-    send(cPickle.dumps([__NAME__,__VERSION__, "READY"]))
+    send(cPickle.dumps([__NAME__,__PVERSION__, "READY"]))
   
     while True:
         data = conn.recv(1024) #the command message should never hit 1KB, let alone more
@@ -80,7 +78,18 @@ def clientthread(conn):
                 continue 
             elif data['COMMAND'] == "capture":
                 print "Called multishot, have data"
-                data =  asc.capture( *data['ARGS'])
+                attempts = 3
+                while (1):
+                    try:
+                        data =  asc.capture( *data['ARGS'])
+                    except StandardError as e:
+                        if attempts != 0:
+                            print "Failed capture. Trying again."
+                        else:
+                            raise(e) # re-raise after failed attempts
+                    else:
+                        break
+                    attempst -= 1
                 try:
                     # If we have "PATHSET" it means we could not store all the images in 
                     # RAM, so had to write them to disk. Different method of sending images
