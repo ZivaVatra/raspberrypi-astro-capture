@@ -18,8 +18,12 @@ import datetime
 import time
 
 from optparse import OptionParser
+default_camera_opts=[
+    "shutter=1",
+    "exposure=verylong",
+]
 
-usage = "usage: %prog [options] $number_of_shots_to_capture "
+usage = "usage: %prog [options] $number_of_shots_to_capture\n\tRun with '-h' for help" 
 parser = OptionParser(usage)
 parser.add_option(
     "-c", "--cameraopts", dest="cameraopts",
@@ -95,7 +99,11 @@ while 1:
     print "Ready status received. Commencing image capture"
 
     # shutter speed is in microseconds, so we extract, and multiply by a million for seconds
-    camera_opts = options.cameraopts.split(',')
+    if options.cameraopts is not None:
+        camera_opts = options.cameraopts.split(',')
+    else:
+        camera_opts = default_camera_opts
+
     shutter_speed = filter(lambda x: x.startswith("shutter"), camera_opts)
     assert len(shutter_speed) == 1, "Failed to get shutter speed. got: %s" % ','.join(shutter_speed)
     shutter_speed = shutter_speed[0].split('=')[-1]
@@ -110,9 +118,9 @@ while 1:
 
     # The timeout is the shutter speed (Seconds) * numberof images * 10.
     # So we don't time out
-    # waiting for capturing to finish. It takes around 10 secons to capture and write
+    # waiting for capturing to finish. It takes around 10 seconds to capture and write
     # to card of a 1 second photo, so we multiply
-    wait = float(shutter_speed) * int(args[0]) * 10 * 3
+    wait = float(shutter_speed) * int(args[0]) * 10 * 1.5
 
     sock.settimeout(wait)
     print "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."\
