@@ -61,6 +61,11 @@ In addition, you can get the current settings of the camera, and set your own ca
 
 # Usage
 
+First, you have to make sure the folder "/imagetmp/" exists and is writable by the user. I use the default "pi" user, so the commands to do this are as follows:
+```
+pi@raspberrypi:~$ sudo mkdir /imagetmp/
+pi@raspberrypi:~$ sudo chown pi:pi /imagetmp/
+```
 So, the "rasbpi" folder goes on the raspberry pi, and you run "python ./imageServer.py" on the pi. This should respond with "Socket now listening". 
 
 On your client, you can run "python ./capture.py -h" for a full help output, including options you can specify. The positional argument is the number of shots you wish to take. 
@@ -126,6 +131,6 @@ Note that while it says "jpg", they are in fact RAW TIFF files in a jpeg contain
 
 - the raspistill program only allows shots up to a max of 6 seconds it seems. Need to see if this is a hardware limitation or just a software thing
 
-# Writing your own interface. 
+# Writing your own interface.
 
 The interface is JSON, and rather simple. Look at the capture.py for how to interact with it. I intend to provide this is a library eventually for use. 
