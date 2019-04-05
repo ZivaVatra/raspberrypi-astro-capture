@@ -61,14 +61,29 @@ In addition, you can get the current settings of the camera, and set your own ca
 
 # Usage
 
-First, you have to make sure the folder "/imagetmp/" exists and is writable by the user. I use the default "pi" user, so the commands to do this are as follows:
+First, you have to make sure your pi camera is enabled and working. Rather than repeat what others have said, I will just point you to rasbpi tutorial on how to do it: https://thepihut.com/blogs/raspberry-pi-tutorials/16021420-how-to-install-use-the-raspberry-pi-camera
+If that doesn't work or isn't to your liking, feel free to search the internet for other tutorials, there are many.
+
+Once done, you have to make sure the tmpfs mount "/imagetmp/" exists and is writable by the user. I use the default "pi" user, so the commands to do this are as follows:
 ```
 pi@raspberrypi:~$ sudo mkdir /imagetmp/
 pi@raspberrypi:~$ sudo chown pi:pi /imagetmp/
-```
-So, the "rasbpi" folder goes on the raspberry pi, and you run "python ./imageServer.py" on the pi. This should respond with "Socket now listening". 
+pi@raspberrypi:~$ sudo mount -t tmpfs none /imagetmp/
 
-On your client, you can run "python ./capture.py -h" for a full help output, including options you can specify. The positional argument is the number of shots you wish to take. 
+```
+
+To make the above mount permanent, add the following to /etc/fstab:
+```
+none            /imagetmp/              tmpfs   defaults        0       0
+```
+
+
+Once done, you can checkout a copy of the git repository to a directory of your choice. The "rasbpi" folder contains logic to run on the pi. You start the server by running "python ./imageServer.py" on the pi. This should respond with "Socket now listening". At that point the system is ready for use. 
+
+On your client, you can run "python ./capture.py -h" for a full help output, including options you can specify. The positional argument is the number of shots you wish to take. A simple example that just takes one photo looks like this:
+```
+python ./capture.py -H $PI_HOSTNAME 1
+```
 
 At the moment there is no maximum number of shots. There are two modes, "normal" and "lowmem". In normal mode the capture data is kept in RAM and sent back along with the response. However if you want to take a batch of more photos than can fit in RAM, than "lowmem" mode is automatically activated (based on pi available RAM and average image size). In this mode the image data is written to the pi SD card, then at the end of the capture, it is all sent to the client. "lowmem" mode is slower (and wears out the SD card by using it as disk cache), but it allows you to capture far more shots than the normal "in memory" mode. 
 
