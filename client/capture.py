@@ -38,7 +38,7 @@ if len(args) != 1:
     parser.error("incorrect number of arguments")
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.settimeout(600)
+sock.settimeout(600) # This is just set by default, we tune it dynamically later
 sock.connect((options.hostname, 3777))
 
 
