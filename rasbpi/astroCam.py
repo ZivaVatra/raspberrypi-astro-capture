@@ -39,6 +39,7 @@ class astroCam(object):
             "encoding=jpg",
             "quality=100",
             "nopreview",
+            "raw",
             "output=%s" % outP,
         ])
 
@@ -62,7 +63,7 @@ class astroCam(object):
         )
 
         (stdout, stderr) = cmd_fd.communicate()
-    
+
         # Wait until termination
         timeout = 10 * 4  # Set a timeout so we don't hang, in secs
         while cmd_fd.poll() is None:
@@ -76,7 +77,7 @@ class astroCam(object):
         if cmd_fd.returncode != 0:
             # We had an error, capture the output of stderr and raise
             raise(RuntimeError("capture failure. Got error: %s" % stderr))
-        
+
 
         if os.path.exists(outP) is False:
             raise(IOError("Output file not written. Something went wrong with image capture"))
