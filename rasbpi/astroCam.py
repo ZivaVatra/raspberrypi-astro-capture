@@ -18,7 +18,7 @@ class astroCam(object):
     def __init__(self):
         # Default parameters for raspistill
         self.params = {
-             "cameraopts": ""
+            "cameraopts": ""
         }
 
     def _takeShot(self, outP=None):
@@ -47,22 +47,21 @@ class astroCam(object):
             if x.strip() == "":
                 continue
             try:
-                y,z = x.split('=')
+                y, z = x.split('=')
                 cmd.extend(["--" + y, z])
             except ValueError:
                 cmd.append("--" + x)
 
-
-        print "Debug: " + ' '.join(cmd)
+        print("Debug: %s" % ' '.join(cmd))
         cmd_fd = sp.Popen(
             cmd,
-            stderr = sp.PIPE,
-            stdout = sp.PIPE,
+            stderr=sp.PIPE,
+            stdout=sp.PIPE,
             shell=False
         )
 
         (stdout, stderr) = cmd_fd.communicate()
-    
+
         # Wait until termination
         timeout = 10 * 4  # Set a timeout so we don't hang, in secs
         while cmd_fd.poll() is None:
@@ -70,16 +69,15 @@ class astroCam(object):
             timeout -= 1
             if timeout == 0:
                 cmd_fd.Terminate()
-                raise(RuntimeError("Timout while waiting for capture to finish"))
+                raise RuntimeError("Timeout while waiting for capture to finish")
 
         # We are done, check return code
         if cmd_fd.returncode != 0:
             # We had an error, capture the output of stderr and raise
-            raise(RuntimeError("capture failure. Got error: %s" % stderr))
-        
+            raise RuntimeError("capture failure. Got error: %s" % stderr)
 
         if os.path.exists(outP) is False:
-            raise(IOError("Output file not written. Something went wrong with image capture"))
+            raise IOError("Output file not written. Something went wrong with image capture")
 
     def capture(self, shots, params):
         ''' Takes one or more shots in succession, useful if you intend to do
@@ -141,11 +139,11 @@ class astroCam(object):
 
 
 if __name__ == "__main__":
-    print "Testing Image capture and storage"
+    print("Testing Image capture and storage")
     asc = astroCam()
     results = asc._takeShot()
     size = len(results)
     if size > 0:
-        print "All good. Got %d bytes of data from camera" % size
+        print("All good. Got %d bytes of data from camera" % size)
     else:
-        print "Something went wrong, we got undefined image eize %d" % size
+        print("Something went wrong, we got undefined image eize %d" % size)
