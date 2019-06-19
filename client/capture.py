@@ -12,7 +12,7 @@
 __VERSION__ = (0, 1, 1)
 
 import socket
-import cPickle
+import pickle
 import sys
 import datetime
 import time
@@ -55,10 +55,10 @@ def recv(verbose=False):
     try:
         size = int(data.rstrip('\0'))
     except ValueError as e:
-        print "Data Value: %s" % data
+        print("Data Value: %s" % data)
         raise(e)
     if verbose:
-        print "Receiving file of %d bytes" % size
+        print("Receiving file of %d bytes" % size)
     data = ""
 
     chunk = 1024 * 64  # Fetch in 64k chunks
@@ -83,26 +83,26 @@ def recv(verbose=False):
 
 while 1:
 
-    name, version, status = cPickle.loads(recv())
+    name, version, status = pickle.loads(recv())
 
     if status != "READY":
         #  Not ready for commands, wait one min and retry
-        print "Status is %s.  Waiting one minute and retrying" % status
+        print("Status is %s.  Waiting one minute and retrying" % status)
         time.sleep(60)
         continue
 
     # And we are ready, begin!
-    print "Ready status received. Commencing image capture"
+    print("Ready status received. Commencing image capture")
 
     # shutter speed is in microseconds, so we extract, and multiply by a million for seconds
     camera_opts = options.cameraopts.split(',')
-    shutter_speed = filter(lambda x: x.startswith("shutter"), camera_opts)
+    shutter_speed = [x for x in camera_opts if x.startswith("shutter")]
     assert len(shutter_speed) == 1, "Failed to get shutter speed. got: %s" % ','.join(shutter_speed)
     shutter_speed = shutter_speed[0].split('=')[-1]
-    camera_opts = filter(lambda x: not x.startswith("shutter"), camera_opts)
+    camera_opts = [x for x in camera_opts if not x.startswith("shutter")]
     camera_opts.append("shutter=%d" % int((float(shutter_speed) * 1000000.0)))
 
-    sock.send(cPickle.dumps({"COMMAND": "capture", "ARGS": [
+    sock.send(pickle.dumps({"COMMAND": "capture", "ARGS": [
         int(args[0]), {
             "cameraopts": ','.join(camera_opts)
         }
@@ -115,18 +115,22 @@ while 1:
     wait = float(shutter_speed) * int(args[0]) * 10 * 3
 
     sock.settimeout(wait)
-    print "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."\
+    print(
+        "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."
         % (wait, (wait / 60.0))
+    )
 
-    response = cPickle.loads(recv(True))
+    response = pickle.loads(recv(True))
     if response['STATUS'] == "ERROR":
         sock.close()
-        raise(Exception("Caught remote error: %s" % response['MSG']))
+        raise Exception
 
-    print "Finished. Execution took %d seconds" % response["DATA"]["EXECTIME"]
+    print("Finished. Execution took %d seconds" % response["DATA"]["EXECTIME"])
     if response['STATUS'] != "OK":
-        print "ERROR, Did not get image data. Got following error:\n%s" % \
+        print(
+            "ERROR, Did not get image data. Got following error:\n%s" %
             response['MSG']
+        )
         sys.exit(1)
 
     #  We have data! Write it out to files
@@ -142,30 +146,30 @@ while 1:
     x = 1
     fn = "astroimage%05d_%s.jpg"
     if inum != -1:
-        print "We are receiving a set of %d images" % inum
+        print("We are receiving a set of %d images" % inum)
         while (x <= inum):
-            print "Receiving and writing out image %d of %d" % (x, inum)
-            image = cPickle.loads(recv(True))
+            print("Receiving and writing out image %d of %d" % (x, inum))
+            image = pickle.loads(recv(True))
             ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
 
             if image['STATUS'] != 'OK':
-                print "\tError. Cannot write image. Got status Error: %s.\
-                    Skipping" % image['STATUS']
+                print("\tError. Cannot write image. Got status Error: %s.\
+                    Skipping" % image['STATUS'])
                 x += 1  # We leave a gap in files
                 continue
             with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
                 fd.write(image['DATA'])
-                print "%d bytes written to file" % (fd.tell())
+                print("%d bytes written to file" % (fd.tell()))
             x += 1
     else:
         ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
         for image in response['DATA']['IMAGES']:
-            print "Writing out JPG image %d of %d" % (
+            print("Writing out JPG image %d of %d" % (
                 x, len(response['DATA']['IMAGES'])
-            )
+            ))
             with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
                 fd.write(image)
-                print "%d bytes written to file" % (fd.tell())
+                print("%d bytes written to file" % (fd.tell()))
                 fd.close()
             x += 1
     break
