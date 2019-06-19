@@ -101,7 +101,7 @@ Recieved 100% (359619 of 359619 bytes)
 105280 bytes written to file
 </pre>
 
-The shutter supports decimals, so if you want something <1 sec, you can use decimals (e.g. 0.5 for half second). Astronomy handles long exposures more often than not, hence the decision to use seconds as the shutter base speed.
+The shutter supports decimals, so if you want something <1 sec, you can use decimals (e.g. 0.5 for half second). Astronomy handles long exposures more often than not, it made more sense to me to have the default units be seconds as the shutter base speed.
 
 The files follow a name template of "astroimage00000_$DATE.jpg". In the above example, we got the following files:
 
