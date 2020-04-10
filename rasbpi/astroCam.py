@@ -81,6 +81,12 @@ class astroCam(object):
 
         cameraopts = self.params['cameraopts'].split(',')
 
+        if shutter is not None:
+            # We can override the shutter here, for internal calibration
+            cameraopts.extend([
+                "shutter=%d" % shutter
+            ])
+
         # No matter what the user specifies, these options have to be added
         # otherwise the system will not work. In theory appending this to the end
         # of the cmd list should mean it takes precedence over earlier (user submitted)
@@ -89,14 +95,9 @@ class astroCam(object):
             "encoding=jpg",
             "quality=100",
             "nopreview",
+            "raw",
             "output=%s" % outP,
         ])
-
-        if shutter is not None:
-            # We can override the shutter here, for internal calibration
-            cameraopts.extend([
-                "shutter=%d" % shutter
-            ])
 
         cmd = ["/usr/bin/raspistill"]
         for x in cameraopts:
