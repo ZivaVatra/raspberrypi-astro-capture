@@ -166,7 +166,7 @@ class astroCam(object):
         # terminated by the OS
         def calc_max_shots(memory):
             # All in Bytes
-            return (memory - (2 * self.imgsize)) / self.imgsize
+            return (memory / self.imgsize)
 
         max_shots = calc_max_shots(self.osi.memory()['MemFree'])
         max_shots *= 0.666  # we can only use 2/3 of available RAM due to overheads
