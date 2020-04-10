@@ -64,6 +64,10 @@ while True:
     except KeyError:
         send_error("Command %s not recognised" % command)
 
+    if "ERROR" in result:
+        send_error(result['ERROR'])
+        continue
+
     if "PATHSET" in result:
         socket.send_json({
             "status": 0,
