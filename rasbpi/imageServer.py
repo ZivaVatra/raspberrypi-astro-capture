@@ -16,15 +16,14 @@ import zmq
 HOST = '0.0.0.0'    # Bind to all interfaces
 PORT = 3777  # Arbitrary non-privileged port
 
-# from astroCam import astroCam
+from astroCam import astroCam
 
 
 server_context = zmq.Context()
 socket = server_context.socket(zmq.REP)
 socket.bind("tcp://%s:%d" % (HOST, PORT))
 
-# asc = astroCam()
-asc = lambda x: "Not implemented"
+asc = astroCam()
 
 # Generate the function table of pub functions to be exposed
 # The 'A\d' at the end indicates we need 1+ args
