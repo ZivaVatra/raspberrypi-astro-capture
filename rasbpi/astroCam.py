@@ -156,8 +156,9 @@ class astroCam(object):
         # We deduct 2x the size of one image from the total, because we don't want
         # to use up all the RAM. There is a risk we will run out of space and be
         # terminated by the OS
-        max_shots = (self.osi.memory()['MemFree'] / self.imgsize) - (2 * self.imgsize)
+        max_shots = ((self.osi.memory()['MemFree'] * 1024) / self.imgsize) - (2 * self.imgsize)
         if shots > max_shots:
+            # We can't fit all shots in RAM, so switch to "LowMem" mode, and try again
             lowMem = True
             # See if we have enough free space to store the shots
             max_shots = (
