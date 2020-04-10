@@ -11,8 +11,6 @@
 
 __VERSION__ = (0, 1, 1)
 
-import socket
-import pickle
 import sys
 import datetime
 import time
@@ -33,57 +31,22 @@ parser.add_option(
 if len(args) != 1:
     parser.error("incorrect number of arguments")
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.settimeout(600)
-sock.connect((options.hostname, 3777))
+import zmq
+
+context = zmq.Context()
+socket = context.socket(zmq.REQ)
+socket.connect("tcp://%s:%s" % (options.hostname, 3777))
 
 
-def recv(verbose=False):
-    def fetch(bytes):
-        while 1:
-            try:
-                data = sock.recv(bytes)
-            except socket.timeout:
-                continue
-            else:
-                break
-        return data
+def recv():
+    message = socket.recv_json()
+    return message
 
-    data = fetch(1)
-    while data[-1] != '\0':
-        data += fetch(1)
-    try:
-        size = int(data.rstrip('\0'))
-    except ValueError as e:
-        print("Data Value: %s" % data)
-        raise(e)
-    if verbose:
-        print("Receiving file of %d bytes" % size)
-    data = ""
-
-    chunk = 1024 * 64  # Fetch in 64k chunks
-    if size < chunk:
-        chunk = size
-
-    length = 0
-    while length < size:
-        data += fetch(chunk)
-        length = len(data)
-        if verbose:
-            if (length % 1024) == 0:
-                sys.stdout.write("Recieved %3d%% (%d of %d bytes)\r" % (
-                    float(length) / size * 100, length, size)
-                )
-
-    if verbose:
-        sys.stdout.write("Recieved %3d%% (%d of %d bytes)\n" % (
-            float(length) / size * 100, length, size)
-        )
-    return data
 
 while 1:
 
-    name, version, status = pickle.loads(recv())
+    message = recv()
+    status = message['status']
 
     if status != "READY":
         #  Not ready for commands, wait one min and retry
@@ -102,11 +65,13 @@ while 1:
     camera_opts = [x for x in camera_opts if not x.startswith("shutter")]
     camera_opts.append("shutter=%d" % int((float(shutter_speed) * 1000000.0)))
 
-    sock.send(pickle.dumps({"COMMAND": "capture", "ARGS": [
-        int(args[0]), {
-            "cameraopts": ','.join(camera_opts)
-        }
-    ]}))
+    socket.send_json(
+        {"COMMAND": "capture", "ARGS": [
+            int(args[0]), {
+                "cameraopts": ','.join(camera_opts)
+            }
+        ]}
+    )
 
     # The timeout is the shutter speed (Seconds) * numberof images * 10.
     # So we don't time out
@@ -114,15 +79,14 @@ while 1:
     # to card of a 1 second photo, so we multiply
     wait = float(shutter_speed) * int(args[0]) * 10 * 3
 
-    sock.settimeout(wait)
     print(
         "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."
         % (wait, (wait / 60.0))
     )
 
-    response = pickle.loads(recv(True))
+    response = recv(True)
     if response['STATUS'] == "ERROR":
-        sock.close()
+        socket.close()
         raise Exception
 
     print("Finished. Execution took %d seconds" % response["DATA"]["EXECTIME"])
@@ -143,13 +107,15 @@ while 1:
     except KeyError:
         inum = -1
 
+
+def write_image():
     x = 1
     fn = "astroimage%05d_%s.jpg"
     if inum != -1:
         print("We are receiving a set of %d images" % inum)
         while (x <= inum):
             print("Receiving and writing out image %d of %d" % (x, inum))
-            image = pickle.loads(recv(True))
+            image = recv(True)
             ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
 
             if image['STATUS'] != 'OK':
@@ -172,4 +138,3 @@ while 1:
                 print("%d bytes written to file" % (fd.tell()))
                 fd.close()
             x += 1
-    break
