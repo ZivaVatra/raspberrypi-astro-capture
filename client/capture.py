@@ -41,7 +41,7 @@ socket.connect("tcp://%s:%d" % (options.hostname, 3777))
 
 def recv():
     message = socket.recv_json()
-    print("raw_msg_debug: %s" % message)
+    # print("raw_msg_debug: %s" % message)
     return message
 
 
@@ -116,54 +116,15 @@ while 1:
     else:
         # No multipart
         ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
-        x = 0
-        for image in [b64decode(x) for x in response['data']['IMAGES']]:
+        idx = 1
+        for image in [b64decode(x) for x in response['result']['IMAGES']]:
             print("Writing out JPG image %d of %d" % (
-                x, len(response['result']['IMAGES'])
+                idx, len(response['result']['IMAGES'])
             ))
-            with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
+            with open(fn % (idx, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
                 fd.write(image)
                 print("%d bytes written to file" % (fd.tell()))
                 fd.close()
-            x += 1
-    #  We have data! Write it out to files
-
-    # First we have to see whether all our data comes as one struct, or whether
-    # it is split (for many images, we have to split transfers, so called
-    # "lowMem" mode.
-    try:
-        inum = response['result']['PATHSET']  # number of images to expect
-    except KeyError:
-        inum = -1
-
-
-def write_image():
-    x = 1
-    fn = "astroimage%05d_%s.jpg"
-    if inum != -1:
-        print("We are receiving a set of %d images" % inum)
-        while (x <= inum):
-            print("Receiving and writing out image %d of %d" % (x, inum))
-            image = recv(True)
-            ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
-
-            if image['STATUS'] != 'OK':
-                print("\tError. Cannot write image. Got status Error: %s.\
-                    Skipping" % image['STATUS'])
-                x += 1  # We leave a gap in files
-                continue
-            with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
-                fd.write(image['result'])
-                print("%d bytes written to file" % (fd.tell()))
-            x += 1
-    else:
-        ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
-        for image in response['result']['IMAGES']:
-            print("Writing out JPG image %d of %d" % (
-                x, len(response['result']['IMAGES'])
-            ))
-            with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
-                fd.write(image)
-                print("%d bytes written to file" % (fd.tell()))
-                fd.close()
-            x += 1
+            idx += 1
+        # Once we are done writing, we can exit
+        sys.exit(0)
