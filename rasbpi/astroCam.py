@@ -162,6 +162,10 @@ class astroCam(object):
             max_shots = (
                 self.osi.filesystem(self.outdir)['BytesAvailable'] / self.imgsize
             ) - (5 * self.imgsize)
+            print("Maximum shots for given disk space (%f Bytes): %d" % (
+                self.osi.filesystem(self.outdir)['BytesAvailable'],
+                max_shots
+            ))
             if shots > max_shots:
                 return {
                     "TIMESTAMP": time.time(),
