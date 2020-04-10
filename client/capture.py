@@ -88,7 +88,7 @@ while 1:
     response = recv()
     if response['status'] != 0:
         print(
-            "ERROR, Did not get image data. Got following error:\n%s" %
+            "ERROR:\n\t%s\nTERMINATING." %
             response['message']
         )
         sys.exit(1)

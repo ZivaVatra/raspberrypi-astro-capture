@@ -57,6 +57,8 @@ class astroCam(object):
         # Add 10% slack to system
         self.imgsize = self.imgsize + ((10.0 / 100.0) * self.imgsize)
         self.outdir = outdir
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
 
     def _get_img_size(self):
         ''' Internal function, takes 5 photos and calculates average image size '''
