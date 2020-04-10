@@ -14,6 +14,7 @@ __VERSION__ = (0, 1, 1)
 import sys
 import datetime
 import time
+from base64 import b64decode
 
 from optparse import OptionParser
 
@@ -106,7 +107,7 @@ while 1:
         for response in dataset:
             ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
             path = response['path']
-            data = response['data']
+            data = b64decode(response['data'])
 
             with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
                 fd.write(data)
@@ -115,7 +116,7 @@ while 1:
         # No multipart
         ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
         x = 0
-        for image in response['data']['IMAGES']:
+        for image in [b64decode(x) for x in response['data']['IMAGES']]:
             print("Writing out JPG image %d of %d" % (
                 x, len(response['DATA']['IMAGES'])
             ))
