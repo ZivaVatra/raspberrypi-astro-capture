@@ -40,6 +40,7 @@ socket.connect("tcp://%s:%d" % (options.hostname, 3777))
 
 def recv():
     message = socket.recv_json()
+    print("raw_msg_debug: %s" % message)
     return message
 
 

@@ -82,6 +82,7 @@ class astroCam(object):
         # of the cmd list should mean it takes precedence over earlier (user submitted)
         # entries.
         cameraopts.extend([
+            "shutter=1",
             "encoding=jpg",
             "quality=100",
             "nopreview",
