@@ -69,6 +69,7 @@ while True:
         continue
 
     if "PATHSET" in result:
+        from base64 import b64encode
         socket.send_json({
             "status": 0,
             "data": result,
@@ -80,7 +81,7 @@ while True:
             with open(path, 'r') as fd:
                 socket.send_json({
                     "path": path,
-                    "data": fd.read()
+                    "data": b64encode(fd.read())
                 })
     else:
         # In normal mode the data is returned as the result,
