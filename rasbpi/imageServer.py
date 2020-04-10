@@ -44,6 +44,7 @@ def send_error(msg):
 message = socket.recv_json()
 command = message['command']
 if command == "ready_status":
+    print("debug: Ready status received")
     socket.send_json({"status": "ready"})
 else:
     raise(Exception("Did not get ready_status as first command"))
@@ -54,7 +55,11 @@ while True:
     print("Recieved: %s" % message)
     command = message['command']
     try:
-        result = funcTable[command]()
+        if 'ARGS' in message:
+            result = funcTable[command](message['ARGS'])
+        else:
+            result = funcTable[command]()
+
     except KeyError:
         send_error("Command %s not recognised" % command)
 

@@ -66,7 +66,7 @@ while 1:
     camera_opts.append("shutter=%d" % int((float(shutter_speed) * 1000000.0)))
 
     socket.send_json(
-        {"COMMAND": "capture", "ARGS": [
+        {"command": "capture", "ARGS": [
             int(args[0]), {
                 "cameraopts": ','.join(camera_opts)
             }
