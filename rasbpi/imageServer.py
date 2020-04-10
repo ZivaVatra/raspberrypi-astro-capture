@@ -24,6 +24,7 @@ socket = server_context.socket(zmq.REP)
 socket.bind("tcp://%s:%d" % (HOST, PORT))
 
 asc = astroCam()
+print("Camera initialised, server ready")
 
 # Generate the function table of pub functions to be exposed
 # The 'A\d' at the end indicates we need 1+ args

@@ -125,7 +125,7 @@ class astroCam(object):
         if os.path.exists(outP) is False:
             raise IOError("Output file not written. Something went wrong with image capture")
 
-    def capture(self, shots, params):
+    def capture(self, args):
         ''' Takes one or more shots in succession, useful if you intend to do
         image stacking.
 
@@ -133,7 +133,8 @@ class astroCam(object):
         Returns struct with data.
 
         '''
-
+        shots = args[0]
+        params = args[1]
         out_image = os.path.join(self.outdir, "cam.jpg")
         s_ts = time.time()
         self.params = params
