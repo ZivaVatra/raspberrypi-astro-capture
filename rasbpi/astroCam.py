@@ -67,6 +67,7 @@ class astroCam(object):
         for f in files:
             self._takeShot(f)
             size += os.stat(f).st_size
+        print("Average image size: %f Bytes" % (size / len(files)))
         return (size / len(files))
 
     def _takeShot(self, outP=None):
