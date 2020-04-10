@@ -16,24 +16,25 @@ import zmq
 HOST = '0.0.0.0'    # Bind to all interfaces
 PORT = 3777  # Arbitrary non-privileged port
 
-from astroCam import astroCam
+# from astroCam import astroCam
 
-asc = astroCam()
+# asc = astroCam()
 
 # Generate the function table of pub functions to be exposed
 # The 'A\d' at the end indicates we need 1+ args
-funcTable = {
-    'capture': asc.capture,
-}
+# funcTable = {
+#    'capture': asc.capture,
+# }
 
 server_context = zmq.Context()
 socket = server_context.socket(zmq.REP)
 socket.bind("tcp://%s:%d" % (HOST, PORT))
 
-# We are ready, send READY command
-socket.send_json({"status": "READY"})
 while True:
     # Wait for command
     message = socket.recv_json()
     print("Recieved: %s" % message)
+    command = message['command']
+    if command == "ready_status":
+        socket.send_json({"status": "ready"})
     socket.send_json({"rc": 0})
