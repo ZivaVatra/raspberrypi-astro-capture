@@ -64,7 +64,24 @@ while True:
     except KeyError:
         send_error("Command %s not recognised" % command)
 
-    socket.send_json({
-        "status": 0,
-        "result": result
-    })
+    if "PATHSET" in result:
+        socket.send_json({
+            "status": 0,
+            "data": result,
+            "multipart": len(result['PATHSET'])
+        })
+        # We used lowMem mode, we need to go and
+        # read in the images from the pathset, and send
+        for path in result['PATHSET']:
+            with open(path, 'r') as fd:
+                socket.send_json({
+                    "path": path,
+                    "data": fd.read()
+                })
+    else:
+        # In normal mode the data is returned as the result,
+        # not need to do anything here
+        socket.send_json({
+            "status": 0,
+            "result": result
+        })

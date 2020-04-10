@@ -73,30 +73,56 @@ while 1:
         ]}
     )
 
-    # The timeout is the shutter speed (Seconds) * numberof images * 10.
+    # The timeout is the shutter speed (Seconds) * numberof images * 15.
     # So we don't time out
-    # waiting for capturing to finish. It takes around 10 secons to capture and write
-    # to card of a 1 second photo, so we multiply
-    wait = float(shutter_speed) * int(args[0]) * 10 * 3
+    # waiting for capturing to finish. It takes around 15 seconds to capture and write
+    # to card of a 1 second photo
+    wait = float(shutter_speed) * int(args[0]) * 15
 
     print(
         "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."
         % (wait, (wait / 60.0))
     )
 
-    response = recv(True)
-    if response['STATUS'] == "ERROR":
-        socket.close()
-        raise Exception
-
-    print("Finished. Execution took %d seconds" % response["DATA"]["EXECTIME"])
-    if response['STATUS'] != "OK":
+    response = recv()
+    if response['status'] != 0:
         print(
             "ERROR, Did not get image data. Got following error:\n%s" %
-            response['MSG']
+            response['message']
         )
         sys.exit(1)
 
+    print("Finished. Execution took %d seconds" % response["data"]["EXECTIME"])
+    fn = "astroimage%05d_%s.jpg"
+    if "multipart" in response:
+        # It is a multipart messages, we need to write out each part as an image
+        print("We have %d files to fetch" % response['multipart'])
+        dataset = []
+        for item in response['multipart']:
+            dataset.append(recv())
+
+        x = 0
+        for response in dataset:
+            ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
+            path = response['path']
+            data = response['data']
+
+            with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
+                fd.write(data)
+                print("%d bytes written to file" % (fd.tell()))
+    else:
+        # No multipart
+        ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
+        x = 0
+        for image in response['data']['IMAGES']:
+            print("Writing out JPG image %d of %d" % (
+                x, len(response['DATA']['IMAGES'])
+            ))
+            with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
+                fd.write(image)
+                print("%d bytes written to file" % (fd.tell()))
+                fd.close()
+            x += 1
     #  We have data! Write it out to files
 
     # First we have to see whether all our data comes as one struct, or whether
