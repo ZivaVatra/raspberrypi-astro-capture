@@ -64,6 +64,10 @@ while True:
     except KeyError:
         send_error("Command %s not recognised" % command)
 
+    # Commands returning None have no further execution
+    if result is None:
+        continue
+
     if "ERROR" in result:
         send_error(result['ERROR'])
         continue

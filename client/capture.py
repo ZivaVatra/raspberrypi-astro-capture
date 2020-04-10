@@ -94,7 +94,7 @@ while 1:
         )
         sys.exit(1)
 
-    print(response.keys)
+    print(response.keys())
     print("Finished. Execution took %d seconds" % response["data"]["EXECTIME"])
     fn = "astroimage%05d_%s.jpg"
     if "multipart" in response:
