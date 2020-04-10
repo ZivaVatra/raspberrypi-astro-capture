@@ -35,7 +35,7 @@ import zmq
 
 context = zmq.Context()
 socket = context.socket(zmq.REQ)
-socket.connect("tcp://%s:%s" % (options.hostname, 3777))
+socket.connect("tcp://%s:%d" % (options.hostname, 3777))
 
 
 def recv():
@@ -44,7 +44,7 @@ def recv():
 
 
 while 1:
-
+    socket.send_json({"status": "ready"})
     message = recv()
     status = message['status']
 
