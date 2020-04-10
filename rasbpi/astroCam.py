@@ -195,7 +195,7 @@ class astroCam(object):
                 self._takeShot(out_image)
                 with open(out_image, 'rb') as fd:
                     # We can't serialise binary in JSON, so b64 encode it
-                    image = b64encode(fd.read())
+                    image = b64encode(fd.read()).decode()
                 os.unlink(out_image)
                 images.append(image)
                 image = None  # Free space

@@ -81,7 +81,7 @@ while True:
             with open(path, 'r') as fd:
                 socket.send_json({
                     "path": path,
-                    "data": b64encode(fd.read())
+                    "data": b64encode(fd.read()).decode()
                 })
     else:
         # In normal mode the data is returned as the result,
