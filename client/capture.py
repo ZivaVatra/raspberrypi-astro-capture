@@ -94,8 +94,8 @@ while 1:
         )
         sys.exit(1)
 
-    print(response.keys())
-    print("Finished. Execution took %d seconds" % response["data"]["EXECTIME"])
+    print(response['result'].keys())
+    print("Finished. Execution took %d seconds" % response["result"]["EXECTIME"])
     fn = "astroimage%05d_%s.jpg"
     if "multipart" in response:
         # It is a multipart messages, we need to write out each part as an image
@@ -106,7 +106,7 @@ while 1:
 
         x = 0
         for response in dataset:
-            ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
+            ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
             path = response['path']
             data = b64decode(response['data'])
 
@@ -115,11 +115,11 @@ while 1:
                 print("%d bytes written to file" % (fd.tell()))
     else:
         # No multipart
-        ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
+        ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
         x = 0
         for image in [b64decode(x) for x in response['data']['IMAGES']]:
             print("Writing out JPG image %d of %d" % (
-                x, len(response['DATA']['IMAGES'])
+                x, len(response['result']['IMAGES'])
             ))
             with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
                 fd.write(image)
@@ -132,7 +132,7 @@ while 1:
     # it is split (for many images, we have to split transfers, so called
     # "lowMem" mode.
     try:
-        inum = response['DATA']['PATHSET']  # number of images to expect
+        inum = response['result']['PATHSET']  # number of images to expect
     except KeyError:
         inum = -1
 
@@ -145,7 +145,7 @@ def write_image():
         while (x <= inum):
             print("Receiving and writing out image %d of %d" % (x, inum))
             image = recv(True)
-            ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
+            ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
 
             if image['STATUS'] != 'OK':
                 print("\tError. Cannot write image. Got status Error: %s.\
@@ -153,14 +153,14 @@ def write_image():
                 x += 1  # We leave a gap in files
                 continue
             with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
-                fd.write(image['DATA'])
+                fd.write(image['result'])
                 print("%d bytes written to file" % (fd.tell()))
             x += 1
     else:
-        ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
-        for image in response['DATA']['IMAGES']:
+        ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
+        for image in response['result']['IMAGES']:
             print("Writing out JPG image %d of %d" % (
-                x, len(response['DATA']['IMAGES'])
+                x, len(response['result']['IMAGES'])
             ))
             with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
                 fd.write(image)
