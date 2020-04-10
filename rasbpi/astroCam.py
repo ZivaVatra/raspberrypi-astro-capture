@@ -157,6 +157,10 @@ class astroCam(object):
         # to use up all the RAM. There is a risk we will run out of space and be
         # terminated by the OS
         max_shots = ((self.osi.memory()['MemFree'] * 1024) / self.imgsize) - (2 * self.imgsize)
+        print("Maximum shots we can fit in RAM (%f Bytes): %d" % (
+            (self.osi.memory()['MemFree'] * 1024),
+            max_shots
+        ))
         if shots > max_shots:
             # We can't fit all shots in RAM, so switch to "LowMem" mode, and try again
             lowMem = True
