@@ -66,12 +66,12 @@ class astroCam(object):
         files = ["/tmp/test%s.jpg" % x for x in range(0, 5)]
         size = 0
         for f in files:
-            self._takeShot(f)
+            self._takeShot(f, shutter=1)
             size += os.stat(f).st_size
         print("Average image size: %f Bytes" % (size / len(files)))
         return (size / len(files))
 
-    def _takeShot(self, outP=None):
+    def _takeShot(self, outP=None, shutter=None):
         ''' Internal function that actually takes the image and returns the data '''
 
         # As we will only ever store one image at a time here, and the images
@@ -86,12 +86,17 @@ class astroCam(object):
         # of the cmd list should mean it takes precedence over earlier (user submitted)
         # entries.
         cameraopts.extend([
-            "shutter=1",
             "encoding=jpg",
             "quality=100",
             "nopreview",
             "output=%s" % outP,
         ])
+
+        if shutter is not None:
+            # We can override the shutter here, for internal calibration
+            cameraopts.extend([
+                "shutter=%d" % shutter
+            ])
 
         cmd = ["/usr/bin/raspistill"]
         for x in cameraopts:
