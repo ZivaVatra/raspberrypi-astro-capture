@@ -44,11 +44,11 @@ def recv():
 
 
 while 1:
-    socket.send_json({"status": "ready"})
+    socket.send_json({"command": "ready_status"})
     message = recv()
     status = message['status']
 
-    if status != "READY":
+    if status != "ready":
         #  Not ready for commands, wait one min and retry
         print("Status is %s.  Waiting one minute and retrying" % status)
         time.sleep(60)
