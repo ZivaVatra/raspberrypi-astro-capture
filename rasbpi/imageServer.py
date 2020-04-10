@@ -30,7 +30,7 @@ print("Camera initialised, server ready")
 # The 'A\d' at the end indicates we need 1+ args
 funcTable = {
     'capture': asc.capture,
-    'ready_status': lambda x: socket.send_json({"status": "ready"})
+    'ready_status': lambda: socket.send_json({"status": "ready"})
 }
 
 
