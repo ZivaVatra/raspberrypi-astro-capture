@@ -156,7 +156,11 @@ class astroCam(object):
         # We deduct 2x the size of one image from the total, because we don't want
         # to use up all the RAM. There is a risk we will run out of space and be
         # terminated by the OS
-        max_shots = ((self.osi.memory()['MemFree'] * 1024) / self.imgsize) - (2 * self.imgsize)
+        def calc_max_shots(memory):
+            # All in Bytes
+            return (memory - (2 * self.imgsize)) / self.imgsize
+
+        max_shots = calc_max_shots(self.osi.memory()['MemFree'] * 1024)
         print("Maximum shots we can fit in RAM (%f Bytes): %d" % (
             (self.osi.memory()['MemFree'] * 1024),
             max_shots
@@ -165,9 +169,7 @@ class astroCam(object):
             # We can't fit all shots in RAM, so switch to "LowMem" mode, and try again
             lowMem = True
             # See if we have enough free space to store the shots
-            max_shots = (
-                self.osi.filesystem(self.outdir)['BytesAvailable'] / self.imgsize
-            ) - (5 * self.imgsize)
+            max_shots = calc_max_shots(self.osi.filesystem(self.outdir)['BytesAvailable'])
             print("Maximum shots for given disk space (%f Bytes): %d" % (
                 self.osi.filesystem(self.outdir)['BytesAvailable'],
                 max_shots
