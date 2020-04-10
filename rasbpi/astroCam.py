@@ -27,7 +27,8 @@ class os_info(object):
                 continue
             try:
                 key, value = [y.strip() for y in x.split(':', 1)]
-                results.update({key: int(value.replace("kB", "").strip())})
+                # Put it in bytes, like everything else
+                results.update({key: int(value.replace("kB", "").strip()) * 1024})
             except ValueError:
                 print("fail", x)
                 continue
