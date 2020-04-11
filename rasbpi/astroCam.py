@@ -88,7 +88,7 @@ class astroCam(object):
                 self.calibration = json.load(fd)
         else:
             capture_calibration = []
-            for speed in range(1000000, 60000000, 1000000):
+            for speed in range(1000000, 60000000, 10000000):
                 capture_calibration.append([speed, self._get_img_size(speed)])
             self.calibration = {
                 "camera": capture_calibration
