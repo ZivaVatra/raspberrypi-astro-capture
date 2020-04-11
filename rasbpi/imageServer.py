@@ -71,13 +71,15 @@ while True:
     message = socket.recv_json()
     print("Recieved: %s" % message)
     command = message['command']
-    try:
-        if 'ARGS' in message:
-            result = funcTable[command](message['ARGS'])
-        else:
-            result = funcTable[command]()
-
-    except KeyError:
+    if command in funcTable:
+        try:
+            if 'ARGS' in message:
+                result = funcTable[command](message['ARGS'])
+            else:
+                result = funcTable[command]()
+        except Exception as e:
+            send_error("Exception: %s" % str(e))
+    else:
         send_error("Command '%s' not recognised" % command)
 
     # Commands returning None have no further execution
