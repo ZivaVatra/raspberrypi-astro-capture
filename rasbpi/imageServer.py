@@ -31,6 +31,7 @@ print("Camera initialised, server ready")
 
 
 def send_error(msg):
+    print("Error: %s" % message)
     socket.send_json({
         "status": -1,
         "message": msg
@@ -78,7 +79,6 @@ while True:
             else:
                 result = funcTable[command]()
         except Exception as e:
-            print(e)
             send_error("Exception: %s" % str(e))
     else:
         send_error("Command '%s' not recognised" % command)
