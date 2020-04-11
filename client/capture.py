@@ -117,6 +117,8 @@ while 1:
             with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
                 fd.write(data)
                 print("%d bytes written to file" % (fd.tell()))
+        # Once all files are written, we terminate
+        sys.exit(0)
     else:
         # No multipart
         ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
