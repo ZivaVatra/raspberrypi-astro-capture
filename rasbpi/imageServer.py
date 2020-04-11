@@ -82,7 +82,7 @@ while True:
         # We used lowMem mode, we need to go and
         # read in the images from the pathset, and send
         for path in result['PATHSET']:
-            with open(path, 'r') as fd:
+            with open(path, 'rb') as fd:
                 socket.send_json({
                     "path": path,
                     "data": b64encode(fd.read()).decode()

@@ -176,6 +176,7 @@ class astroCam(object):
         ))
         if shots > max_shots:
             # We can't fit all shots in RAM, so switch to "LowMem" mode, and try again
+            print("lowMem mode enabled")
             lowMem = True
             # See if we have enough free space to store the shots
             max_shots = calc_max_shots(self.osi.filesystem(self.outdir)['BytesAvailable'])
