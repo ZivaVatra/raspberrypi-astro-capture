@@ -58,6 +58,7 @@ class astroCam(object):
         self.calibration = None
         self.osi = os_info()
         self.outdir = outdir
+        self.calibration_file = "./calibration.json"
         if not os.path.exists(outdir):
             os.makedirs(outdir)
 
@@ -74,22 +75,26 @@ class astroCam(object):
         print("Average capture time: %f seconds" % (execution_time))
         return [(size / len(files)), execution_time]
 
+    def uncalibrate(self):
+        ''' Removes existing calibration settings, and deletes file '''
+        self.calibration = None
+        os.unlink(self.calibration_file)
+
     def calibrate(self):
         ''' Set up calibration (things like image size/capture time). '''
         # First, we see if we already have a calibration file
-        infile = "./calibration.json"
-        if os.path.exists(infile):
-            with open(infile, 'r') as fd:
+        if os.path.exists(self.calibration_file):
+            with open(self.calibration_file, 'r') as fd:
                 self.calibration = json.load(fd)
         else:
             capture_calibration = []
-            for speed in range(0, 60, 10):
+            for speed in range(1, 60000, 10000):
                 capture_calibration.append([speed, self._get_img_size(speed)])
             self.calibration = {
                 "camera": capture_calibration
             }
-            with open(infile, 'w') as fd:
-                json.dump(fd, self.calibration)
+            with open(self.calibration_file, 'w') as fd:
+                json.dump(self.calibration, fd)
 
     def query(self):
         ''' Returns some queried details about the system '''
