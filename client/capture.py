@@ -72,8 +72,8 @@ while 1:
     message = send_command("calibrate")
     print("Target capabilities:")
     message = send_command("query")
-    for key in message:
-        print("%s: %s" % (key, message[key]))
+    for key in message['result']:
+        print("\t%s: %s" % (key, message['result'][key]))
 
     # And we are ready, begin!
 
@@ -86,7 +86,7 @@ while 1:
     # shutter has to be an integer
     camera_opts.append("shutter=%d" % int((float(shutter_speed) * 1000000.0)))
 
-    send_message(
+    socket.send_json(
         {"command": "capture", "ARGS": [
             int(args[0]), {
                 "cameraopts": ','.join(camera_opts)
@@ -104,11 +104,12 @@ while 1:
         "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."
         % (wait, (wait / 60.0))
     )
-    response = recieve_message()
-    if response['status'] != 0:
+    response = socket.recv_json()
+    print(response.keys())
+    if response['status'] != "ok":
         print(
             "ERROR:\n\t%s\nTERMINATING." %
-            response['message']
+            response['result']
         )
         sys.exit(1)
 

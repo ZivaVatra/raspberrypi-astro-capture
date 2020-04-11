@@ -87,10 +87,10 @@ class astroCam(object):
             with open(self.calibration_file, 'r') as fd:
                 self.calibration = json.load(fd)
         else:
-            capture_calibration = []
-            capture_calibration.append([1000000, self._get_img_size(1000000)])
+            imgsize, exectime = self._get_img_size(1000000)
             self.calibration = {
-                "camera": capture_calibration
+                "imgsize": imgsize,
+                "exectime": exectime
             }
             with open(self.calibration_file, 'w') as fd:
                 json.dump(self.calibration, fd)
