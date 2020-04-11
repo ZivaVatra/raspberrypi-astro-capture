@@ -89,6 +89,9 @@ while True:
                     "path": path,
                     "data": b64encode(fd.read()).decode()
                 })
+                # ZMQ REQ/REP works in lock step, one message in/one out, so
+                # we have to recieve an ack from client below
+                socket.recv()  # Wait for message from client acknowledging
             os.unlink(path)  # delete the source after sending
     else:
         # In normal mode the data is returned as the result,

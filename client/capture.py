@@ -85,7 +85,6 @@ while 1:
         "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."
         % (wait, (wait / 60.0))
     )
-
     response = recv()
     if response['status'] != 0:
         print(
@@ -102,8 +101,10 @@ while 1:
         print("We have %d files to fetch" % response['multipart'])
         dataset = []
         x = response['multipart']
+        time.sleep(5)
         while(x != 0):
             dataset.append(recv())
+            socket.send_json({"status": "ready"})  # send that we are ready for next packet
             x -= 1
 
         x = 0
