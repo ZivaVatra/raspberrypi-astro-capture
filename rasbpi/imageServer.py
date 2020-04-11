@@ -117,6 +117,7 @@ while True:
                     "data": b64encode(fd.read()).decode()
                 })
             os.unlink(path)  # delete the source after sending
+        socket.send_json({"status": "ok"})  # to set the counter to recv mode for next command
     else:
         # In normal mode the data is returned as the result,
         # not need to do anything here

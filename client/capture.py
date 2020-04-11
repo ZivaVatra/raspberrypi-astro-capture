@@ -122,18 +122,14 @@ while 1:
     print("Finished. Execution took %d seconds" % response["result"]["EXECTIME"])
     fn = "astroimage%05d_%s.jpg"
     if "multipart" in response:
-        send_message({"status": "ready"})  # send that we are ready for next packet
         # It is a multipart messages, we need to write out each part as an image
         print("We have %d files to fetch" % response['multipart'])
         dataset = []
-        x = response['multipart']
-        idx = 0
-        while(x != 0):
-            dataset.append(recieve_message())
-            send_message({"status": "ready"})  # send that we are ready for next packet
-            x -= 1
-
-            response = dataset[idx]
+        x = response['multipart'] + 1
+        idx = 1
+        while(x != idx):
+            socket.send_json({"status": "ready"})  # send that we are ready for next packet
+            response = socket.recv_json()
 
             ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
             path = response['path']
