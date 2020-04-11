@@ -68,7 +68,7 @@ while 1:
     print("Ready status received. Commencing image capture")
 
     # Now query for capabilities
-    print("Calibrating (if this is your first run, this can take some time)")
+    print("Calibrating (if this is your first run, this can take about a minute)")
     message = send_command("calibrate")
     print("Target capabilities:")
     message = send_command("query")
