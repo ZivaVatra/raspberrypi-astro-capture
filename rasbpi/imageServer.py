@@ -60,7 +60,7 @@ def recieve_message():
 
 while True:
     # Wait for command
-    message = recieve_message()
+    message = socket.recv_json()
     print("Recieved: %s" % message)
     command = message['command']
     try:
