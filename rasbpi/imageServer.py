@@ -103,7 +103,7 @@ while True:
     if "PATHSET" in result:
         from base64 import b64encode
         send_message({
-            "status": 0,
+            "status": "ok",
             "result": result,
             "multipart": len(result['PATHSET'])
         })
