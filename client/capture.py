@@ -77,6 +77,8 @@ while 1:
     for key in message['result']:
         print("\t%s: %s" % (key, message['result'][key]))
 
+    imgsize = message['result']['average_image_size']
+    exectime = message['result']['1s_shutter_average_execution_time']
     # And we are ready, begin!
 
     # shutter speed is in microseconds, so we extract, and multiply by a million for seconds
@@ -96,11 +98,8 @@ while 1:
         ]}
     )
 
-    # The timeout is the shutter speed (Seconds) * numberof images * 15.
-    # So we don't time out
-    # waiting for capturing to finish. It takes around 10 seconds after capture to download and write
-    # to card. 15 seconds is roughly the fixed startup time
-    wait = float(shutter_speed) * int(args[0]) * 10 + 15
+    # wat = avg_capture_time * number_of_captures * shutter_length
+    wait = exectime * int(args[0]) * (float(shutter_speed) * 1000000)
 
     print(
         "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."
