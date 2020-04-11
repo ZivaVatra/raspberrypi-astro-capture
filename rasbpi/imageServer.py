@@ -69,6 +69,7 @@ while True:
     except KeyError:
         send_error("Command %s not recognised" % command)
 
+    socket.send_json({"status": "ok"})
     # Commands returning None have no further execution
     if result is None:
         continue
