@@ -97,6 +97,7 @@ while 1:
     print("Finished. Execution took %d seconds" % response["result"]["EXECTIME"])
     fn = "astroimage%05d_%s.jpg"
     if "multipart" in response:
+        socket.send_json({"status": "ready"})  # send that we are ready for next packet
         # It is a multipart messages, we need to write out each part as an image
         print("We have %d files to fetch" % response['multipart'])
         dataset = []

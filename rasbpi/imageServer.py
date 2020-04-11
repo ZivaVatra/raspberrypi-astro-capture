@@ -80,6 +80,7 @@ while True:
             "result": result,
             "multipart": len(result['PATHSET'])
         })
+        socket.recv()  # Wait for message from client acknowledging
         # We used lowMem mode, we need to go and
         # read in the images from the pathset, and send
         for path in result['PATHSET']:
