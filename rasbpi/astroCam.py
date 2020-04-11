@@ -93,6 +93,9 @@ class astroCam(object):
 
     def query(self):
         ''' Returns some queried details about the system '''
+        # If no calibration, we calibrate here
+        if self.calibration is None:
+            self.calibrate()
         imgsize = sum([x[1][0] for x in self.calibration['camera']]) / len(self.calibration['camera'])
 
         def calc_max_shots(memory):
