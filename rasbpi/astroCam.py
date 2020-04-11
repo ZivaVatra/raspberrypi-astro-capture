@@ -71,7 +71,7 @@ class astroCam(object):
             size += os.stat(f).st_size
         execution_time = (time.time() - start_time) / len(files)
         print("Average image size: %f Bytes" % (size / len(files)))
-        print("Average capture time: %f seconds" (execution_time))
+        print("Average capture time: %f seconds" % (execution_time))
         return [(size / len(files)), execution_time]
 
     def calibrate(self):

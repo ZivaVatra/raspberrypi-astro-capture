@@ -59,15 +59,17 @@ while 1:
         print("Status is %s.  Waiting one minute and retrying" % status)
         time.sleep(60)
         continue
+    print("Ready status received. Commencing image capture")
 
     # Now query for capabilities
+    print("Calibrating (if this is your first run, this can take some time)")
+    message = send_command("calibrate")
     print("Target capabilities:")
     message = send_command("query")
     for key in message:
         print("%s: %s" % (key, message[key]))
 
     # And we are ready, begin!
-    print("Ready status received. Commencing image capture")
 
     # shutter speed is in microseconds, so we extract, and multiply by a million for seconds
     camera_opts = options.cameraopts.split(',')
