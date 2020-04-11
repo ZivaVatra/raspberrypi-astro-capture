@@ -100,7 +100,7 @@ class astroCam(object):
         # If no calibration, we calibrate here
         if self.calibration is None:
             self.calibrate()
-        imgsize = sum([x[1][0] for x in self.calibration['camera']]) / len(self.calibration['camera'])
+        imgsize = self.calibration['imgsize']
 
         def calc_max_shots(memory):
             # All in Bytes
@@ -121,7 +121,7 @@ class astroCam(object):
 
         return {
             "Average image size": imgsize,
-            "Average execution times": [],
+            "Average execution time (1s)": self.calibration['exectime'],
             "Max RAM shots": self.max_shots_ram,
             "Max Disk shots": self.max_shots_disk,
             "calibration_values": self.calibration
