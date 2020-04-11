@@ -72,6 +72,12 @@ while True:
     except KeyError:
         send_error("Command %s not recognised" % command)
 
+    # Commands returning their own status as "ok" means
+    # execution is completed and we should not go any further
+    # in logic tree
+    if "status" in result:
+        if result['status'] == "ok":
+            continue
     # Commands returning None have no further execution
     if result is None:
         socket.send_json({"status": "ok"})
@@ -103,6 +109,6 @@ while True:
         # In normal mode the data is returned as the result,
         # not need to do anything here
         send_message({
-            "status": 0,
+            "status": "ok",
             "result": result
         })
