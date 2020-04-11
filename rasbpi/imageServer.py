@@ -44,20 +44,23 @@ def send_error(msg):
         "status": -1,
         "message": msg
     })
+    return socket.recv_json()
 
 
-# Set up comms
-# message = socket.recv_json()
-# command = message['command']
-# if command == "ready_status":
-#     print("debug: Ready status received")
-#     socket.send_json({"status": "ready"})
-# else:
-#     raise(Exception("Did not get ready_status as first command"))
+def send_message(msg):
+    socket.send_json(msg)
+    return socket.recv_json()
+
+
+def recieve_message():
+    msg = socket.recv_json()
+    socket.send_json({"status": "ok"})
+    return msg
+
 
 while True:
     # Wait for command
-    message = socket.recv_json()
+    message = recieve_message()
     print("Recieved: %s" % message)
     command = message['command']
     try:
@@ -79,28 +82,25 @@ while True:
 
     if "PATHSET" in result:
         from base64 import b64encode
-        socket.send_json({
+        send_message({
             "status": 0,
             "result": result,
             "multipart": len(result['PATHSET'])
         })
-        socket.recv()  # Wait for message from client acknowledging
         # We used lowMem mode, we need to go and
         # read in the images from the pathset, and send
         for path in result['PATHSET']:
             with open(path, 'rb') as fd:
-                socket.send_json({
+                send_message({
                     "result": result,
                     "path": path,
                     "data": b64encode(fd.read()).decode()
                 })
-                socket.recv()  # Wait for message from client acknowledging
             os.unlink(path)  # delete the source after sending
-        socket.send_json({})
     else:
         # In normal mode the data is returned as the result,
         # not need to do anything here
-        socket.send_json({
+        send_message({
             "status": 0,
             "result": result
         })

@@ -39,15 +39,21 @@ socket = context.socket(zmq.REQ)
 socket.connect("tcp://%s:%d" % (options.hostname, 3777))
 
 
-def recv():
+def recieve_message():
     message = socket.recv_json()
+    socket.send_json({"status": "ok"})
     # print("raw_msg_debug: %s" % message)
     return message
 
 
+def send_message(msg):
+    socket.send_json(msg)
+    return socket.recv_json()
+
+
 def send_command(command):
     socket.send_json({"command": command})
-    return recv()
+    return socket.recv_json()
 
 
 while 1:
@@ -80,7 +86,7 @@ while 1:
     # shutter has to be an integer
     camera_opts.append("shutter=%d" % int((float(shutter_speed) * 1000000.0)))
 
-    socket.send_json(
+    send_message(
         {"command": "capture", "ARGS": [
             int(args[0]), {
                 "cameraopts": ','.join(camera_opts)
@@ -98,7 +104,7 @@ while 1:
         "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."
         % (wait, (wait / 60.0))
     )
-    response = recv()
+    response = recieve_message()
     if response['status'] != 0:
         print(
             "ERROR:\n\t%s\nTERMINATING." %
@@ -110,15 +116,15 @@ while 1:
     print("Finished. Execution took %d seconds" % response["result"]["EXECTIME"])
     fn = "astroimage%05d_%s.jpg"
     if "multipart" in response:
-        socket.send_json({"status": "ready"})  # send that we are ready for next packet
+        send_message({"status": "ready"})  # send that we are ready for next packet
         # It is a multipart messages, we need to write out each part as an image
         print("We have %d files to fetch" % response['multipart'])
         dataset = []
         x = response['multipart']
         idx = 0
         while(x != 0):
-            dataset.append(recv())
-            socket.send_json({"status": "ready"})  # send that we are ready for next packet
+            dataset.append(recieve_message())
+            send_message({"status": "ready"})  # send that we are ready for next packet
             x -= 1
 
             response = dataset[idx]
