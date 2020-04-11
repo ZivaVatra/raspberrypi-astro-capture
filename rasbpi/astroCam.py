@@ -120,11 +120,10 @@ class astroCam(object):
         ))
 
         return {
-            "Average image size": imgsize,
-            "Average execution time (1s)": self.calibration['exectime'],
-            "Max RAM shots": self.max_shots_ram,
-            "Max Disk shots": self.max_shots_disk,
-            "calibration_values": self.calibration
+            "average_image_size": imgsize,
+            "1s_shutter_average_execution_time": self.calibration['exectime'],
+            "max_ram_shots": self.max_shots_ram,
+            "max_disk_shots": self.max_shots_disk,
         }
 
     def _takeShot(self, outP=None, shutter=None):

@@ -78,7 +78,7 @@ while True:
             else:
                 result = funcTable[command]()
         except Exception as e:
-            print(e.message)
+            print(e)
             send_error("Exception: %s" % str(e))
     else:
         send_error("Command '%s' not recognised" % command)
