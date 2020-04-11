@@ -35,7 +35,7 @@ funcTable = {
     'capture': asc.capture,
     'calibrate': asc.calibrate,
     'query': asc.query,
-    'ready_status': lambda: 0
+    'ready_status': lambda: {"status": "ready"}
 }
 
 
