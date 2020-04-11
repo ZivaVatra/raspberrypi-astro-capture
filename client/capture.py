@@ -85,10 +85,10 @@ while 1:
     camera_opts = options.cameraopts.split(',')
     shutter_speed = [x for x in camera_opts if x.startswith("shutter")]
     assert len(shutter_speed) == 1, "Failed to get shutter speed. got: %s" % ','.join(shutter_speed)
-    shutter_speed = shutter_speed[0].split('=')[-1]
+    shutter_speed = float(shutter_speed[0].split('=')[-1])
     camera_opts = [x for x in camera_opts if not x.startswith("shutter")]
     # shutter has to be an integer
-    camera_opts.append("shutter=%d" % int((float(shutter_speed) * 1000000.0)))
+    camera_opts.append("shutter=%d" % int(shutter_speed * 1000000.0))
 
     socket.send_json(
         {"command": "capture", "ARGS": [
@@ -99,7 +99,11 @@ while 1:
     )
 
     # wat = avg_capture_time * number_of_captures * shutter_length
-    wait = exectime * int(args[0]) * (float(shutter_speed) * 1000000)
+    assert shutter_speed > 0, "Shutter speed must be > 0 seconds"
+    if shutter_speed >= 1:
+        wait = exectime * int(args[0]) * shutter_speed
+    elif shutter_speed < 1:
+        wait = exectime * int(args[0])
 
     print(
         "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."
