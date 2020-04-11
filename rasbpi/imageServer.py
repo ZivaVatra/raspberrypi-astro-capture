@@ -34,7 +34,7 @@ print("Camera initialised, server ready")
 funcTable = {
     'capture': asc.capture,
     'calibrate': asc.calibrate,
-    'query': lambda: {"status": "ok", "result": asc.query},
+    'query': lambda: {"status": "ok", "result": asc.query()},
     'ready_status': lambda: {"status": "ready"}
 }
 
