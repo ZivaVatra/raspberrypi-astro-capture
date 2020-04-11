@@ -72,7 +72,7 @@ while 1:
     message = send_command("calibrate")
     print("Target capabilities:")
     message = send_command("query")
-    assert message['status'] == "ok", "Cannot continue. message: %s" % message
+    assert message['status'] == "ok", "Cannot continue. server message: %s" % message['message']
 
     for key in message['result']:
         print("\t%s: %s" % (key, message['result'][key]))

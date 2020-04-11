@@ -29,15 +29,6 @@ socket.bind("tcp://%s:%d" % (HOST, PORT))
 asc = astroCam()
 print("Camera initialised, server ready")
 
-# Generate the function table of pub functions to be exposed
-# The 'A\d' at the end indicates we need 1+ args
-funcTable = {
-    'capture': asc.capture,
-    'calibrate': asc.calibrate,
-    'query': lambda: {"status": "ok", "result": asc.query()},
-    'ready_status': lambda: {"status": "ready"}
-}
-
 
 def send_error(msg):
     socket.send_json({
@@ -56,6 +47,23 @@ def recieve_message():
     msg = socket.recv_json()
     socket.send_json({"status": "ok"})
     return msg
+
+
+def query():
+    return {
+        "status": "ok",
+        "result": asc.query()
+    }
+
+
+# Generate the function table of pub functions to be exposed
+# The 'A\d' at the end indicates we need 1+ args
+funcTable = {
+    'capture': asc.capture,
+    'calibrate': asc.calibrate,
+    'query': query,
+    'ready_status': lambda: {"status": "ready"}
+}
 
 
 while True:
