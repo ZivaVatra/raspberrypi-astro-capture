@@ -69,7 +69,6 @@ while True:
     except KeyError:
         send_error("Command %s not recognised" % command)
 
-    socket.recv_json()  # Wait for ack
     # Commands returning None have no further execution
     if result is None:
         continue
