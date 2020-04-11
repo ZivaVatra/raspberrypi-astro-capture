@@ -99,7 +99,6 @@ while True:
             os.unlink(path)  # delete the source after sending
         socket.send_json({})
     else:
-        socket.recv()  # Wait for message from client acknowledging
         # In normal mode the data is returned as the result,
         # not need to do anything here
         socket.send_json({
