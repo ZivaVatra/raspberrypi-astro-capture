@@ -47,13 +47,13 @@ def send_error(msg):
 
 
 # Set up comms
-message = socket.recv_json()
-command = message['command']
-if command == "ready_status":
-    print("debug: Ready status received")
-    socket.send_json({"status": "ready"})
-else:
-    raise(Exception("Did not get ready_status as first command"))
+# message = socket.recv_json()
+# command = message['command']
+# if command == "ready_status":
+#     print("debug: Ready status received")
+#     socket.send_json({"status": "ready"})
+# else:
+#     raise(Exception("Did not get ready_status as first command"))
 
 while True:
     # Wait for command
