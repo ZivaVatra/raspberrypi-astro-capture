@@ -35,7 +35,7 @@ funcTable = {
     'capture': asc.capture,
     'calibrate': asc.calibrate,
     'query': asc.query,
-    'ready_status': lambda: socket.send_json({"status": "ready"})
+    'ready_status': lambda: 0
 }
 
 
