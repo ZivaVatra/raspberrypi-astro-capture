@@ -101,8 +101,10 @@ while 1:
         # It is a multipart messages, we need to write out each part as an image
         print("We have %d files to fetch" % response['multipart'])
         dataset = []
-        for item in response['multipart']:
+        x = response['multipart']
+        while(x != 0):
             dataset.append(recv())
+            x -= 1
 
         x = 0
         for response in dataset:
