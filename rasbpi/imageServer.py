@@ -109,7 +109,7 @@ while True:
     else:
         # In normal mode the data is returned as the result,
         # not need to do anything here
-        send_message({
+        socket.send_json({
             "status": "ok",
             "result": result
         })
