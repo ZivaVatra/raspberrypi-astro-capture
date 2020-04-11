@@ -125,7 +125,7 @@ while 1:
         # It is a multipart messages, we need to write out each part as an image
         print("We have %d files to fetch" % response['multipart'])
         dataset = []
-        x = response['multipart'] + 1
+        x = response['multipart']
         idx = 1
         while(x != idx):
             socket.send_json({"status": "ready"})  # send that we are ready for next packet
@@ -138,7 +138,7 @@ while 1:
             filename = fn % (idx, ts.strftime('%Y-%m-%d_%H:%M:%S'))
             with open(filename, 'wb') as fd:
                 fd.write(data)
-                print("(%d/%d) %d bytes written to %s" % (
+                print("disk:(%d/%d) %d bytes written to %s" % (
                     idx,
                     x,
                     fd.tell(),
@@ -152,13 +152,15 @@ while 1:
         ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
         idx = 1
         for image in [b64decode(x) for x in response['result']['IMAGES']]:
-            print("Writing out JPG image %d of %d" % (
-                idx, len(response['result']['IMAGES'])
-            ))
             filename = fn % (idx, ts.strftime('%Y-%m-%d_%H:%M:%S'))
             with open(filename, 'wb') as fd:
                 fd.write(image)
-                print("%d bytes written to %s" % (fd.tell(), filename))
+                print("ram:(%d/%d) %d bytes written to %s" % (
+                    idx,
+                    len(response['result']['IMAGES']),
+                    fd.tell(),
+                    filename
+                ))
                 fd.close()
             idx += 1
         # Once we are done writing, we can exit
