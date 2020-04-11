@@ -70,7 +70,7 @@ while True:
             result = funcTable[command]()
 
     except KeyError:
-        send_error("Command %s not recognised" % command)
+        send_error("Command '%s' not recognised" % command)
 
     # Commands returning None have no further execution
     if result is None:

@@ -62,8 +62,8 @@ while 1:
 
     if status != "ready":
         #  Not ready for commands, wait one min and retry
-        print("Status is %s.  Waiting one minute and retrying" % status)
-        time.sleep(60)
+        print("Status is not \"ready\". Waiting 10s and retrying")
+        time.sleep(10)
         continue
     print("Ready status received. Commencing image capture")
 
@@ -72,6 +72,8 @@ while 1:
     message = send_command("calibrate")
     print("Target capabilities:")
     message = send_command("query")
+    assert message['status'] == "ok", "Cannot continue. message: %s" % message
+
     for key in message['result']:
         print("\t%s: %s" % (key, message['result'][key]))
 
