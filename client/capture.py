@@ -62,8 +62,8 @@ while 1:
 
     if status != "ready":
         #  Not ready for commands, wait one min and retry
-        print("Status is not \"ready\". Waiting 10s and retrying")
-        time.sleep(10)
+        print("Status is not \"ready\". Waiting 2s and retrying")
+        time.sleep(2)
         continue
     print("Ready status received. Commencing image capture")
 
@@ -126,8 +126,9 @@ while 1:
         print("We have %d files to fetch" % response['multipart'])
         dataset = []
         x = response['multipart']
-        idx = 1
+        idx = 0
         while(x != idx):
+            idx += 1
             socket.send_json({"status": "ready"})  # send that we are ready for next packet
             response = socket.recv_json()
 
@@ -144,7 +145,6 @@ while 1:
                     fd.tell(),
                     filename
                 ))
-            idx += 1
         # And done
         sys.exit(0)
     else:

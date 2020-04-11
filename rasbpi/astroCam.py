@@ -235,6 +235,7 @@ class astroCam(object):
         x = 0
         images = []
         while x != shots:
+            x += 1
             if lowMem:
                 fn = os.path.join(self.outdir, "temp%05d.jpg" % x)
                 self._takeShot(fn)
@@ -247,7 +248,6 @@ class astroCam(object):
                 os.unlink(out_image)
                 images.append(image)
                 image = None  # Free space
-            x += 1
 
         e_ts = time.time()
 
