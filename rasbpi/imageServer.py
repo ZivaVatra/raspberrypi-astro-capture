@@ -59,7 +59,7 @@ def recieve_message():
 
 
 while True:
-    # Wait for command
+    # Wait for command - Recieve
     message = socket.recv_json()
     print("Recieved: %s" % message)
     command = message['command']
@@ -74,12 +74,14 @@ while True:
 
     # Commands returning None have no further execution
     if result is None:
+        socket.send_json({"status": "ok"})
         continue
 
     if "ERROR" in result:
-        send_error(result['ERROR'])
+        socket.send_json({"status": result['ERROR']})
         continue
 
+    # If we reach this point, we still have the send tocken
     if "PATHSET" in result:
         from base64 import b64encode
         send_message({
