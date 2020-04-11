@@ -11,6 +11,7 @@
 
 __NAME__ = "AstroCam"
 
+import os
 import zmq
 
 HOST = '0.0.0.0'    # Bind to all interfaces
@@ -76,7 +77,7 @@ while True:
         from base64 import b64encode
         socket.send_json({
             "status": 0,
-            "data": result,
+            "result": result,
             "multipart": len(result['PATHSET'])
         })
         # We used lowMem mode, we need to go and
@@ -84,9 +85,11 @@ while True:
         for path in result['PATHSET']:
             with open(path, 'rb') as fd:
                 socket.send_json({
+                    "result": result,
                     "path": path,
                     "data": b64encode(fd.read()).decode()
                 })
+            os.unlink(path)  # delete the source after sending
     else:
         # In normal mode the data is returned as the result,
         # not need to do anything here
