@@ -45,9 +45,13 @@ def recv():
     return message
 
 
+def send_command(command):
+    socket.send_json({"command": command})
+    return recv()
+
+
 while 1:
-    socket.send_json({"command": "ready_status"})
-    message = recv()
+    message = send_command("ready_status")
     status = message['status']
 
     if status != "ready":
@@ -55,6 +59,12 @@ while 1:
         print("Status is %s.  Waiting one minute and retrying" % status)
         time.sleep(60)
         continue
+
+    # Now query for capabilities
+    print("Target capabilities:")
+    message = send_command("query")
+    for key in message:
+        print("%s: %s" % (key, message[key]))
 
     # And we are ready, begin!
     print("Ready status received. Commencing image capture")
@@ -65,6 +75,7 @@ while 1:
     assert len(shutter_speed) == 1, "Failed to get shutter speed. got: %s" % ','.join(shutter_speed)
     shutter_speed = shutter_speed[0].split('=')[-1]
     camera_opts = [x for x in camera_opts if not x.startswith("shutter")]
+    # shutter has to be an integer
     camera_opts.append("shutter=%d" % int((float(shutter_speed) * 1000000.0)))
 
     socket.send_json(
@@ -77,9 +88,9 @@ while 1:
 
     # The timeout is the shutter speed (Seconds) * numberof images * 15.
     # So we don't time out
-    # waiting for capturing to finish. It takes around 15 seconds to capture and write
-    # to card of a 1 second photo
-    wait = float(shutter_speed) * int(args[0]) * 15
+    # waiting for capturing to finish. It takes around 10 seconds after capture to download and write
+    # to card. 15 seconds is roughly the fixed startup time
+    wait = float(shutter_speed) * int(args[0]) * 10 + 15
 
     print(
         "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."
@@ -102,22 +113,29 @@ while 1:
         print("We have %d files to fetch" % response['multipart'])
         dataset = []
         x = response['multipart']
-        time.sleep(5)
+        idx = 0
         while(x != 0):
             dataset.append(recv())
             socket.send_json({"status": "ready"})  # send that we are ready for next packet
             x -= 1
 
-        x = 0
-        for response in dataset:
+            response = dataset[idx]
+
             ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
             path = response['path']
             data = b64decode(response['data'])
 
-            with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
+            filename = fn % (idx, ts.strftime('%Y-%m-%d_%H:%M:%S'))
+            with open(filename, 'wb') as fd:
                 fd.write(data)
-                print("%d bytes written to file" % (fd.tell()))
-        # Once all files are written, we terminate
+                print("(%d/%d) %d bytes written to %s" % (
+                    idx,
+                    x,
+                    fd.tell(),
+                    filename
+                ))
+            idx += 1
+        # And done
         sys.exit(0)
     else:
         # No multipart
@@ -127,9 +145,10 @@ while 1:
             print("Writing out JPG image %d of %d" % (
                 idx, len(response['result']['IMAGES'])
             ))
-            with open(fn % (idx, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
+            filename = fn % (idx, ts.strftime('%Y-%m-%d_%H:%M:%S'))
+            with open(filename, 'wb') as fd:
                 fd.write(image)
-                print("%d bytes written to file" % (fd.tell()))
+                print("%d bytes written to %s" % (fd.tell(), filename))
                 fd.close()
             idx += 1
         # Once we are done writing, we can exit

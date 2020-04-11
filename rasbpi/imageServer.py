@@ -19,6 +19,8 @@ PORT = 3777  # Arbitrary non-privileged port
 
 from astroCam import astroCam
 
+# NB: ZMQ REQ/REP works in lock step, one message in/one out, so
+# we have to recieve an ack from client below
 
 server_context = zmq.Context()
 socket = server_context.socket(zmq.REP)
@@ -31,6 +33,8 @@ print("Camera initialised, server ready")
 # The 'A\d' at the end indicates we need 1+ args
 funcTable = {
     'capture': asc.capture,
+    'calibrate': asc.calibrate,
+    'query': asc.query,
     'ready_status': lambda: socket.send_json({"status": "ready"})
 }
 
@@ -90,10 +94,9 @@ while True:
                     "path": path,
                     "data": b64encode(fd.read()).decode()
                 })
-                # ZMQ REQ/REP works in lock step, one message in/one out, so
-                # we have to recieve an ack from client below
                 socket.recv()  # Wait for message from client acknowledging
             os.unlink(path)  # delete the source after sending
+        socket.send_json({})
     else:
         # In normal mode the data is returned as the result,
         # not need to do anything here

@@ -11,6 +11,7 @@
 
 import subprocess as sp
 import os
+import json
 import time
 from base64 import b64encode
 
@@ -54,23 +55,70 @@ class astroCam(object):
         self.params = {
             "cameraopts": ""
         }
+        self.calibration = None
         self.osi = os_info()
-        self.imgsize = self._get_img_size()
-        # Add 10% slack to system
-        self.imgsize = self.imgsize + ((10.0 / 100.0) * self.imgsize)
         self.outdir = outdir
         if not os.path.exists(outdir):
             os.makedirs(outdir)
 
-    def _get_img_size(self):
-        ''' Internal function, takes 5 photos and calculates average image size '''
+    def _get_img_size(self, shutterspeed=1):
+        ''' Internal function, takes 5 photos and calculates average image size and capture time '''
         files = ["/tmp/test%s.jpg" % x for x in range(0, 5)]
         size = 0
+        start_time = time.time()
         for f in files:
-            self._takeShot(f, shutter=1)
+            self._takeShot(f, shutter=shutterspeed)
             size += os.stat(f).st_size
+        execution_time = (time.time() - start_time) / len(files)
         print("Average image size: %f Bytes" % (size / len(files)))
-        return (size / len(files))
+        print("Average capture time: %f seconds" (execution_time))
+        return [(size / len(files)), execution_time]
+
+    def calibrate(self):
+        ''' Set up calibration (things like image size/capture time). '''
+        # First, we see if we already have a calibration file
+        infile = "./calibration.json"
+        if os.path.exists(infile):
+            with open(infile, 'r') as fd:
+                self.calibration = json.load(fd)
+        else:
+            capture_calibration = []
+            for speed in range(0, 60, 10):
+                capture_calibration.append([speed, self._get_img_size(speed)])
+            self.calibration = {
+                "camera": capture_calibration
+            }
+            with open(infile, 'w') as fd:
+                json.dump(fd, self.calibration)
+
+    def query(self):
+        ''' Returns some queried details about the system '''
+        imgsize = sum([x[1][0] for x in self.calibration['camera']]) / len(self.calibration['camera'])
+
+        def calc_max_shots(memory):
+            # All in Bytes
+            return (memory / imgsize)
+
+        self.max_shots_ram = calc_max_shots(self.osi.memory()['MemFree'])
+        self.max_shots_ram *= 0.333  # we can only use 1/3 of available RAM due to overheads
+        print("Maximum shots we can fit in RAM (%f Bytes): %d" % (
+            self.osi.memory()['MemFree'],
+            self.max_shots_ram
+        ))
+        # For disk
+        self.max_shots_disk = calc_max_shots(self.osi.filesystem(self.outdir)['BytesAvailable'])
+        print("Maximum shots for given disk space (%f Bytes): %d" % (
+            self.osi.filesystem(self.outdir)['BytesAvailable'],
+            self.max_shots_disk
+        ))
+
+        return {
+            "Average image size": imgsize,
+            "Average execution times": [],
+            "Max RAM shots": self.max_shots_ram,
+            "Max Disk shots": self.max_shots_disk,
+            "calibration_values": self.calibration
+        }
 
     def _takeShot(self, outP=None, shutter=None):
         ''' Internal function that actually takes the image and returns the data '''
@@ -164,27 +212,12 @@ class astroCam(object):
         # We deduct 2x the size of one image from the total, because we don't want
         # to use up all the RAM. There is a risk we will run out of space and be
         # terminated by the OS
-        def calc_max_shots(memory):
-            # All in Bytes
-            return (memory / self.imgsize)
-
-        max_shots = calc_max_shots(self.osi.memory()['MemFree'])
-        max_shots *= 0.333  # we can only use 1/3 of available RAM due to overheads
-        print("Maximum shots we can fit in RAM (%f Bytes): %d" % (
-            self.osi.memory()['MemFree'],
-            max_shots
-        ))
-        if shots > max_shots:
+        if shots > self.max_shots_ram:
             # We can't fit all shots in RAM, so switch to "LowMem" mode, and try again
             print("lowMem mode enabled")
             lowMem = True
             # See if we have enough free space to store the shots
-            max_shots = calc_max_shots(self.osi.filesystem(self.outdir)['BytesAvailable'])
-            print("Maximum shots for given disk space (%f Bytes): %d" % (
-                self.osi.filesystem(self.outdir)['BytesAvailable'],
-                max_shots
-            ))
-            if shots > max_shots:
+            if shots > self.max_shots_disk:
                 return {
                     "TIMESTAMP": time.time(),
                     "ERROR": "Not enough disk for all shots",
