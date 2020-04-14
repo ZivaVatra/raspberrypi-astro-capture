@@ -6,12 +6,12 @@ Astrophotography imaging using a Raspberry Pi and camera
 ## 14/04/2020:
 
 New version (v3) released, this version:
-	* Replaced custom socket API with ZeroMQ backend (you need to install pyzmq on the servier/client for the software to work now) - It made more sense to use an off the shelf messaging technology rather than rolling my own (and then having to maintain it afterwards)
-	* Auto calibration of capture time and image size, from this we get
-		* Estimation of execution time on client
-		* Accurate reporting of number of photos we can take in one go.
-	* General bugfixes
-	* Sample photos published :-)
+* Replaced custom socket API with ZeroMQ backend (you need to install pyzmq on the servier/client for the software to work now) - It made more sense to use an off the shelf messaging technology rather than rolling my own (and then having to maintain it afterwards)
+* Auto calibration of capture time and image size, from this we get
+	* Estimation of execution time on client
+	* Accurate reporting of number of photos we can take in one go.
+* General bugfixes
+* Sample photos published :-)
 
 # Sample photos
 
