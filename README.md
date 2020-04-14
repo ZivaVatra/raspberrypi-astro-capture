@@ -103,9 +103,11 @@ As part of the calibration, you get a print out of the number of shots you can t
 
 The camera options are forwarded directly to raspistill, with a bit of parsing. Note that unlike raspistill, the shutter speed is in seconds, not microseconds. So for example, if you want a 1 second capture, you can use the client like so:
 
-Take 5 shots with given settings: `python ./capture.py -H astrocam -c "shutter=1,ISO=100,exposure=verylong,metering=matrix,awb=off" 5`
+Take 5 shots with given settings: 
+`python ./capture.py -H astrocam -c "shutter=1,ISO=100,exposure=verylong,metering=matrix,awb=off" 5`
 
-Take 1 shot, different settings: `python  ./capture.py -H astrocam -c shutter=10,ISO=800,exposure=off,awb=off,analoggain=10,mode=2 1`
+Take 1 shot, different settings:
+`python  ./capture.py -H astrocam -c shutter=10,ISO=800,exposure=off,awb=off,analoggain=10,mode=2 1`
 
 The shutter supports decimals, so if you want something <1 sec, you can use decimals (e.g. 0.5 for half second). Astronomy handles long exposures more often than not, it made more sense to me to have the default units be seconds as the shutter base speed.
 
