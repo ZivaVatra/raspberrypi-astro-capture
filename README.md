@@ -17,8 +17,8 @@ New version (v3) released, this version:
 
 I have included the first sample photo set (taken 14/04/2020), using the longest exposure I have managed to tease out of the camera so far (10s). This photo set was taken with the "v1" camera (5mpx) with no infrared filter.
 
-I include one original size (unmodified) to give you an idea for the quality managed so far.
-[Set1 Example](/example_captures/set1/astroimage00001_2020-04-14_21:45:17.jpg?raw=true "Set1 Example").¬
+I include one original size (unmodified) to give you an idea for the quality managed so far:
+[Set1 Example](/example_captures/set1/astroimage00001_2020-04-14_21:45:17.jpg?raw=true "Set1 Example").
 
 The rest were reduced in size and converted into an animated gif.
 Overall, the quality I am seeing is better than the webcams of old, but not as good as my DSLR (not surprising, considering the huge difference in sensor size).
