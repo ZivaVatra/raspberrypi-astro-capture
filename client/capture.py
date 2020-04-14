@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # vim: ts=4 expandtab ai
 #
@@ -11,19 +11,14 @@
 
 __VERSION__ = (0, 1, 1)
 
-import socket
-import cPickle
 import sys
 import datetime
 import time
+from base64 import b64decode
 
 from optparse import OptionParser
-default_camera_opts=[
-    "shutter=1",
-    "exposure=verylong",
-]
 
-usage = "usage: %prog [options] $number_of_shots_to_capture\n\tRun with '-h' for help" 
+usage = "usage: %prog [options] $number_of_shots_to_capture "
 parser = OptionParser(usage)
 parser.add_option(
     "-c", "--cameraopts", dest="cameraopts",
@@ -37,143 +32,136 @@ parser.add_option(
 if len(args) != 1:
     parser.error("incorrect number of arguments")
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.settimeout(600) # This is just set by default, we tune it dynamically later
-sock.connect((options.hostname, 3777))
+import zmq
+
+context = zmq.Context()
+socket = context.socket(zmq.REQ)
+socket.connect("tcp://%s:%d" % (options.hostname, 3777))
 
 
-def recv(verbose=False):
-    def fetch(bytes):
-        while 1:
-            try:
-                data = sock.recv(bytes)
-            except socket.timeout:
-                continue
-            else:
-                break
-        return data
+def recieve_message():
+    message = socket.recv_json()
+    socket.send_json({"status": "ok"})
+    # print("raw_msg_debug: %s" % message)
+    return message
 
-    data = fetch(1)
-    while data[-1] != '\0':
-        data += fetch(1)
-    try:
-        size = int(data.rstrip('\0'))
-    except ValueError as e:
-        print "Data Value: %s" % data
-        raise(e)
-    if verbose:
-        print "Receiving file of %d bytes" % size
-    data = ""
 
-    chunk = 1024 * 64  # Fetch in 64k chunks
-    if size < chunk:
-        chunk = size
+def send_message(msg):
+    socket.send_json(msg)
+    return socket.recv_json()
 
-    length = 0
-    while length < size:
-        data += fetch(chunk)
-        length = len(data)
-        if verbose:
-            if (length % 1024) == 0:
-                sys.stdout.write("Recieved %3d%% (%d of %d bytes)\r" % (
-                    float(length) / size * 100, length, size)
-                )
 
-    if verbose:
-        sys.stdout.write("Recieved %3d%% (%d of %d bytes)\n" % (
-            float(length) / size * 100, length, size)
-        )
-    return data
+def send_command(command):
+    socket.send_json({"command": command})
+    return socket.recv_json()
+
 
 while 1:
+    message = send_command("ready_status")
+    status = message['status']
 
-    name, version, status = cPickle.loads(recv())
-
-    if status != "READY":
+    if status != "ready":
         #  Not ready for commands, wait one min and retry
-        print "Status is %s.  Waiting one minute and retrying" % status
-        time.sleep(60)
+        print("Status is not \"ready\". Waiting 2s and retrying")
+        time.sleep(2)
         continue
+    print("Ready status received. Commencing image capture")
 
+    # Now query for capabilities
+    print("Calibrating (if this is your first run, this can take about a minute)")
+    message = send_command("calibrate")
+    print("Target capabilities:")
+    message = send_command("query")
+    assert message['status'] == "ok", "Cannot continue. server message: %s" % message['message']
+
+    for key in message['result']:
+        print("\t%s: %s" % (key, message['result'][key]))
+
+    imgsize = message['result']['average_image_size']
+    exectime = message['result']['1s_shutter_average_execution_time']
     # And we are ready, begin!
-    print "Ready status received. Commencing image capture"
 
     # shutter speed is in microseconds, so we extract, and multiply by a million for seconds
-    if options.cameraopts is not None:
-        camera_opts = options.cameraopts.split(',')
-    else:
-        camera_opts = default_camera_opts
-
-    shutter_speed = filter(lambda x: x.startswith("shutter"), camera_opts)
+    camera_opts = options.cameraopts.split(',')
+    shutter_speed = [x for x in camera_opts if x.startswith("shutter")]
     assert len(shutter_speed) == 1, "Failed to get shutter speed. got: %s" % ','.join(shutter_speed)
-    shutter_speed = shutter_speed[0].split('=')[-1]
-    camera_opts = filter(lambda x: not x.startswith("shutter"), camera_opts)
-    camera_opts.append("shutter=%d" % int((float(shutter_speed) * 1000000.0)))
+    shutter_speed = float(shutter_speed[0].split('=')[-1])
+    camera_opts = [x for x in camera_opts if not x.startswith("shutter")]
+    # shutter has to be an integer
+    camera_opts.append("shutter=%d" % int(shutter_speed * 1000000.0))
 
-    sock.send(cPickle.dumps({"COMMAND": "capture", "ARGS": [
-        int(args[0]), {
-            "cameraopts": ','.join(camera_opts)
-        }
-    ]}))
+    socket.send_json(
+        {"command": "capture", "ARGS": [
+            int(args[0]), {
+                "cameraopts": ','.join(camera_opts)
+            }
+        ]}
+    )
 
-    # The timeout is the shutter speed (Seconds) * numberof images * 10.
-    # So we don't time out
-    # waiting for capturing to finish. It takes around 10 seconds to capture and write
-    # to card of a 1 second photo, so we multiply
-    wait = float(shutter_speed) * int(args[0]) * 10 * 1.5
+    # wat = avg_capture_time * number_of_captures * shutter_length
+    assert shutter_speed > 0, "Shutter speed must be > 0 seconds"
+    if shutter_speed >= 1:
+        wait = exectime * int(args[0]) * shutter_speed
+    elif shutter_speed < 1:
+        wait = exectime * int(args[0])
 
-    sock.settimeout(wait)
-    print "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."\
+    print(
+        "Waiting. Estimate %d seconds (%.1f minutes) for capture to complete."
         % (wait, (wait / 60.0))
-
-    response = cPickle.loads(recv(True))
-    if response['STATUS'] == "ERROR":
-        sock.close()
-        raise(Exception("Caught remote error: %s" % response['MSG']))
-
-    print "Finished. Execution took %d seconds" % response["DATA"]["EXECTIME"]
-    if response['STATUS'] != "OK":
-        print "ERROR, Did not get image data. Got following error:\n%s" % \
-            response['MSG']
+    )
+    response = socket.recv_json()
+    print(response.keys())
+    if response['status'] != "ok":
+        print(
+            "ERROR:\n\t%s\nTERMINATING." %
+            response['result']
+        )
         sys.exit(1)
 
-    #  We have data! Write it out to files
-
-    # First we have to see whether all our data comes as one struct, or whether
-    # it is split (for many images, we have to split transfers, so called
-    # "lowMem" mode.
-    try:
-        inum = response['DATA']['PATHSET']  # number of images to expect
-    except KeyError:
-        inum = -1
-
-    x = 1
+    print(response['result'].keys())
+    print("Finished. Execution took %d seconds" % response["result"]["EXECTIME"])
     fn = "astroimage%05d_%s.jpg"
-    if inum != -1:
-        print "We are receiving a set of %d images" % inum
-        while (x <= inum):
-            print "Receiving and writing out image %d of %d" % (x, inum)
-            image = cPickle.loads(recv(True))
-            ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
+    if "multipart" in response:
+        # It is a multipart messages, we need to write out each part as an image
+        print("We have %d files to fetch" % response['multipart'])
+        dataset = []
+        x = response['multipart']
+        idx = 0
+        while(x != idx):
+            idx += 1
+            socket.send_json({"status": "ready"})  # send that we are ready for next packet
+            response = socket.recv_json()
 
-            if image['STATUS'] != 'OK':
-                print "\tError. Cannot write image. Got status Error: %s.\
-                    Skipping" % image['STATUS']
-                x += 1  # We leave a gap in files
-                continue
-            with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
-                fd.write(image['DATA'])
-                print "%d bytes written to file" % (fd.tell())
-            x += 1
+            ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
+            path = response['path']
+            data = b64decode(response['data'])
+
+            filename = fn % (idx, ts.strftime('%Y-%m-%d_%H:%M:%S'))
+            with open(filename, 'wb') as fd:
+                fd.write(data)
+                print("disk:(%d/%d) %d bytes written to %s" % (
+                    idx,
+                    x,
+                    fd.tell(),
+                    filename
+                ))
+        # And done
+        sys.exit(0)
     else:
-        ts = datetime.datetime.fromtimestamp(response['DATA']['TIMESTAMP'])
-        for image in response['DATA']['IMAGES']:
-            print "Writing out JPG image %d of %d" % (
-                x, len(response['DATA']['IMAGES'])
-            )
-            with open(fn % (x, ts.strftime('%Y-%m-%d_%H:%M:%S')), 'wb') as fd:
+        # No multipart
+        ts = datetime.datetime.fromtimestamp(response['result']['TIMESTAMP'])
+        idx = 1
+        for image in [b64decode(x) for x in response['result']['IMAGES']]:
+            filename = fn % (idx, ts.strftime('%Y-%m-%d_%H:%M:%S'))
+            with open(filename, 'wb') as fd:
                 fd.write(image)
-                print "%d bytes written to file" % (fd.tell())
+                print("ram:(%d/%d) %d bytes written to %s" % (
+                    idx,
+                    len(response['result']['IMAGES']),
+                    fd.tell(),
+                    filename
+                ))
                 fd.close()
-            x += 1
-    break
+            idx += 1
+        # Once we are done writing, we can exit
+        sys.exit(0)

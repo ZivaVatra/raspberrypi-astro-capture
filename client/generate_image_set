@@ -1,0 +1,6 @@
+#!/bin/bash
+while true; do 
+	python  ./capture.py -H $1 -c shutter=10,ISO=800,exposure=night,awb=off,analoggain=12.0,digitalgain=8.0 1;
+	sleep 1m;
+done
+
