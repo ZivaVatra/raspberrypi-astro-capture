@@ -21,7 +21,7 @@ I include one original size (unmodified) to give you an idea for the quality man
 [Set1 Example](/example_captures/set1/astroimage00001_2020-04-14_21:45:17.jpg?raw=true "Set1 Example").
 
 The rest were reduced in size and converted into an animated gif.
-Overall, the quality I am seeing is better than the webcams of old, but not as good as my DSLR (not surprising, considering the huge difference in sensor size).
+Overall, the quality I am seeing is better than the webcams of old, but not as good as my DSLR (not surprising, considering the huge difference in sensor size and cost between them).
 
 Still, the noise is far less than I expected it would be. It is a pretty decent showing for a first attempt. I always enjoy these time lapse animations of the sky :-)
 
