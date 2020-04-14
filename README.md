@@ -67,8 +67,16 @@ In addition, you can get the current settings of the camera, and set your own ca
 
 # Usage
 
+## Server
 So, the "rasbpi" folder goes on the raspberry pi, and you run "python ./imageServer.py" on the pi. This should respond with "Camera initialised, server ready".
 
+The server is currently very verbose, and that will probably reduce as the system matures, but for now you can expect output akin to this when running:
+
+```
+Placeholder
+```
+
+## Client
 On your client, you can run "python ./capture.py -h" for a full help output, including options you can specify. The positional argument is the number of shots you wish to take.
 
 At the moment there is no maximum number of shots. There are two modes, "normal" and "lowmem". In normal mode the capture data is kept in RAM and sent back along with the response. However if you want to take a batch of more photos than can fit in RAM, than "lowmem" mode is automatically activated (based on pi available RAM and average image size). In this mode the image data is written to the pi SD card, then at the end of the capture, it is all sent to the client. "lowmem" mode is slower (and wears out the SD card by using it as disk cache), but it allows you to capture far more shots than the normal "in memory" mode.
@@ -95,10 +103,9 @@ As part of the calibration, you get a print out of the number of shots you can t
 
 The camera options are forwarded directly to raspistill, with a bit of parsing. Note that unlike raspistill, the shutter speed is in seconds, not microseconds. So for example, if you want a 1 second capture, you can use the client like so:
 
-Take 5 shots with given settings:
-`python ./capture.py -H astrocam -c "shutter=1,ISO=100,exposure=verylong,metering=matrix,awb=off" 5`
-Take 1 shot, different settings:
-`python  ./capture.py -H astrocam -c shutter=10,ISO=800,exposure=off,awb=off,analoggain=10,mode=2 1`
+Take 5 shots with given settings: `python ./capture.py -H astrocam -c "shutter=1,ISO=100,exposure=verylong,metering=matrix,awb=off" 5`
+
+Take 1 shot, different settings: `python  ./capture.py -H astrocam -c shutter=10,ISO=800,exposure=off,awb=off,analoggain=10,mode=2 1`
 
 The shutter supports decimals, so if you want something <1 sec, you can use decimals (e.g. 0.5 for half second). Astronomy handles long exposures more often than not, it made more sense to me to have the default units be seconds as the shutter base speed.
 
@@ -139,5 +146,5 @@ Since then, the rasbpi has exploded in popularity, and now there is a large numb
 
 # Limitations
 
-- the raspistill program only allows exposure up to a max of 10 seconds it seems. This unfortunately seems to be a hardware limitation, to do with the number of registers on the CCD sensor. See this very informative page on the camera: https://picamera.readthedocs.io/en/release-1.13/fov.html
+- the raspistill program only allows exposure up to a max of 10 seconds it seems. This unfortunately seems to be a hardware limitation, to do with the number of registers on the CCD sensor. See this very informative page on the camera subsystem: https://picamera.readthedocs.io/en/release-1.13/fov.html
 
