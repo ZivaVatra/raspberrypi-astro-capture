@@ -17,7 +17,10 @@ New version (v3) released, this version:
 
 I have included the first sample photo set (taken 14/04/2020), using the longest exposure I have managed to tease out of the camera so far (10s). This photo set was taken with the "v1" camera (5mpx) with no infrared filter.
 
-I include one original size (unmodified) to give you an idea for the quality managed so far. The rest were reduced in size and converted into an animated gif.
+I include one original size (unmodified) to give you an idea for the quality managed so far.
+[Set1 Example](/example_captures/set1/astroimage00001_2020-04-14_21:45:17.jpg?raw=true "Set1 Example").¬
+
+The rest were reduced in size and converted into an animated gif.
 Overall, the quality I am seeing is better than the webcams of old, but not as good as my DSLR (not surprising, considering the huge difference in sensor size).
 
 Still, the noise is far less than I expected it would be. It is a pretty decent showing for a first attempt. I always enjoy these time lapse animations of the sky :-)
@@ -25,7 +28,7 @@ Still, the noise is far less than I expected it would be. It is a pretty decent 
 ![Set1 Animation](/example_captures/set1/animated.gif?raw=true "Set1 Animated").¬
 
 
-It also shows the software is working as intended, taking one shot every second for as long as I could stay awake (next step for the system is to get power over ethernet set up, then I can just run an ethernet cable out of the house and let it run all night long. 
+It also shows the software is working as intended, taking one shot every second for as long as I could stay awake (next step for the system is to get power over ethernet set up, then I can just run an ethernet cable out of the house and let it run all night long). In this case it was a 2 hour period from approx 21:30 to 23:30
 
 You will notice, the photos have a bit of vignetting around the sides. This is because I put the pi camera in a shroud, to try to reduce the horrible light pollution from the new white "LED" streetlights they stuck where I live. As you can see in the corner, I could not get rid of all the glare :-(, even with the shroud.
 
