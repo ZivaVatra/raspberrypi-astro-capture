@@ -6,12 +6,12 @@ Astrophotography imaging using a Raspberry Pi and camera
 ## 14/04/2020:
 
 New version (v3) released, this version:
-	- Replaced custom socket API with ZeroMQ backend (you need to install pyzmq on the servier/client for the software to work now) - It made more sense to use an off the shelf messaging technology rather than rolling my own (and then having to maintain it afterwards)
-	- Auto calibration of capture time and image size, from this we get
-		 - Estimation of execution time on client
-		 - Accurate reporting of number of photos we can take in one go.
-	- General bugfixes
-	- Sample photos published :-)
+	* Replaced custom socket API with ZeroMQ backend (you need to install pyzmq on the servier/client for the software to work now) - It made more sense to use an off the shelf messaging technology rather than rolling my own (and then having to maintain it afterwards)
+	* Auto calibration of capture time and image size, from this we get
+		* Estimation of execution time on client
+		* Accurate reporting of number of photos we can take in one go.
+	* General bugfixes
+	* Sample photos published :-)
 
 # Sample photos
 
@@ -111,13 +111,13 @@ The shutter supports decimals, so if you want something <1 sec, you can use deci
 
 The files follow a name template of "astroimage00000_$DATE.jpg". In the above example, we got the following files:
 
-<pre>
+```
 astroimage00001_2018-10-01_11:57:01.jpg
 astroimage00002_2018-10-01_11:57:01.jpg
 astroimage00003_2018-10-01_11:57:01.jpg
 astroimage00004_2018-10-01_11:57:01.jpg
 astroimage00005_2018-10-01_11:57:01.jpg
-</pre>
+```
 
 
 Note that while it says "jpg", the raw bayer data is added to the metadata in the container. No idea why it is done this way, the underlying "rasbpistill" generates these files. In future I will attempt to have the software convert this to something more normal; either pure tiff, or PPM files (which in my experience, seems to be a rather popular format for astronomy software ).
