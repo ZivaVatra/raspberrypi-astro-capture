@@ -49,82 +49,9 @@ class os_info(object):
         return results
 
 
-class astroCam(object):
-    def __init__(self, outdir="/imagetmp/"):
-        # Default parameters for raspistill
-        self.params = {
-            "cameraopts": ""
-        }
-        self.calibration = None
-        self.osi = os_info()
-        self.outdir = outdir
-        self.calibration_file = "./calibration.json"
-        if not os.path.exists(outdir):
-            os.makedirs(outdir)
-
-    def _get_img_size(self, shutterspeed=1):
-        ''' Internal function, takes 5 photos and calculates average image size and capture time '''
-        files = ["/tmp/test%s.jpg" % x for x in range(0, 5)]
-        size = 0
-        start_time = time.time()
-        for f in files:
-            self._takeShot(f, shutter=shutterspeed)
-            size += os.stat(f).st_size
-        execution_time = (time.time() - start_time) / len(files)
-        print("Average image size: %f Bytes" % (size / len(files)))
-        print("Average capture time: %f seconds" % (execution_time))
-        return [(size / len(files)), execution_time]
-
-    def uncalibrate(self):
-        ''' Removes existing calibration settings, and deletes file '''
-        self.calibration = None
-        os.unlink(self.calibration_file)
-
-    def calibrate(self):
-        ''' Set up calibration (things like image size/capture time). '''
-        # First, we see if we already have a calibration file
-        if os.path.exists(self.calibration_file):
-            with open(self.calibration_file, 'r') as fd:
-                self.calibration = json.load(fd)
-        else:
-            imgsize, exectime = self._get_img_size(1000000)
-            self.calibration = {
-                "imgsize": imgsize,
-                "exectime": exectime
-            }
-            with open(self.calibration_file, 'w') as fd:
-                json.dump(self.calibration, fd)
-
-    def query(self):
-        ''' Returns some queried details about the system '''
-        # If no calibration, we calibrate here
-        if self.calibration is None:
-            self.calibrate()
-        imgsize = self.calibration['imgsize']
-
-        def calc_max_shots(memory):
-            # All in Bytes
-            return (memory / imgsize)
-
-        self.max_shots_ram = calc_max_shots(self.osi.memory()['MemFree'])
-        self.max_shots_ram *= 0.333  # we can only use 1/3 of available RAM due to overheads
-        print("Maximum shots we can fit in RAM (%f Bytes): %d" % (
-            self.osi.memory()['MemFree'],
-            self.max_shots_ram
-        ))
-        # For disk
-        self.max_shots_disk = calc_max_shots(self.osi.filesystem(self.outdir)['BytesAvailable'])
-        print("Maximum shots for given disk space (%f Bytes): %d" % (
-            self.osi.filesystem(self.outdir)['BytesAvailable'],
-            self.max_shots_disk
-        ))
-
-        return {
-            "average_image_size": imgsize,
-            "1s_shutter_average_execution_time": self.calibration['exectime'],
-            "max_ram_shots": self.max_shots_ram,
-            "max_disk_shots": self.max_shots_disk,
-        }
+class pi_camera_legacy:
+    def __init__(self):
+        pass
 
     def _takeShot(self, outP=None, shutter=None):
         ''' Internal function that actually takes the image and returns the data '''
@@ -265,6 +192,89 @@ class astroCam(object):
                 "IMAGES": images,
                 "EXECTIME": (e_ts - s_ts)
             }
+
+
+class astroCam(object, pi_camera_legacy):
+
+    def __init__(self, backend, outdir="/imagetmp/"):
+        if backend == "rasbpicam":
+            pi_camera_legacy.__init__(self)
+        else:
+            raise(NotImplementedError("Backend '%s' not found. Is it valid?" % backend))
+        # Default parameters for raspistill
+        self.params = {
+            "cameraopts": ""
+        }
+        self.calibration = None
+        self.osi = os_info()
+        self.outdir = outdir
+        self.calibration_file = "./calibration.json"
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
+
+    def _get_img_size(self, shutterspeed=1):
+        ''' Internal function, takes 5 photos and calculates average image size and capture time '''
+        files = ["/tmp/test%s.jpg" % x for x in range(0, 5)]
+        size = 0
+        start_time = time.time()
+        for f in files:
+            self._takeShot(f, shutter=shutterspeed)
+            size += os.stat(f).st_size
+        execution_time = (time.time() - start_time) / len(files)
+        print("Average image size: %f Bytes" % (size / len(files)))
+        print("Average capture time: %f seconds" % (execution_time))
+        return [(size / len(files)), execution_time]
+
+    def uncalibrate(self):
+        ''' Removes existing calibration settings, and deletes file '''
+        self.calibration = None
+        os.unlink(self.calibration_file)
+
+    def calibrate(self):
+        ''' Set up calibration (things like image size/capture time). '''
+        # First, we see if we already have a calibration file
+        if os.path.exists(self.calibration_file):
+            with open(self.calibration_file, 'r') as fd:
+                self.calibration = json.load(fd)
+        else:
+            imgsize, exectime = self._get_img_size(1000000)
+            self.calibration = {
+                "imgsize": imgsize,
+                "exectime": exectime
+            }
+            with open(self.calibration_file, 'w') as fd:
+                json.dump(self.calibration, fd)
+
+    def query(self):
+        ''' Returns some queried details about the system '''
+        # If no calibration, we calibrate here
+        if self.calibration is None:
+            self.calibrate()
+        imgsize = self.calibration['imgsize']
+
+        def calc_max_shots(memory):
+            # All in Bytes
+            return (memory / imgsize)
+
+        self.max_shots_ram = calc_max_shots(self.osi.memory()['MemFree'])
+        self.max_shots_ram *= 0.333  # we can only use 1/3 of available RAM due to overheads
+        print("Maximum shots we can fit in RAM (%f Bytes): %d" % (
+            self.osi.memory()['MemFree'],
+            self.max_shots_ram
+        ))
+        # For disk
+        self.max_shots_disk = calc_max_shots(self.osi.filesystem(self.outdir)['BytesAvailable'])
+        print("Maximum shots for given disk space (%f Bytes): %d" % (
+            self.osi.filesystem(self.outdir)['BytesAvailable'],
+            self.max_shots_disk
+        ))
+
+        return {
+            "average_image_size": imgsize,
+            "1s_shutter_average_execution_time": self.calibration['exectime'],
+            "max_ram_shots": self.max_shots_ram,
+            "max_disk_shots": self.max_shots_disk,
+        }
 
 
 if __name__ == "__main__":
