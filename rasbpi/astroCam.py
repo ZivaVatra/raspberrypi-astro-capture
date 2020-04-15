@@ -194,11 +194,18 @@ class pi_camera_legacy:
             }
 
 
-class astroCam(pi_camera_legacy):
+class pi_camera_lib():
+    def __init__(self):
+        pass
+
+
+class astroCam(pi_camera_legacy, pi_camera_lib):
 
     def __init__(self, backend, outdir="/imagetmp/"):
-        if backend == "rasbpicam":
+        if backend == "rasbpicam-cmdline":
             pi_camera_legacy.__init__(self)
+        elif backend == "rasbpicam-lib":
+            pi_camera_lib.__init__(self)
         else:
             raise(NotImplementedError("Backend '%s' not found. Is it valid?" % backend))
         # Default parameters for raspistill
