@@ -26,7 +26,7 @@ server_context = zmq.Context()
 socket = server_context.socket(zmq.REP)
 socket.bind("tcp://%s:%d" % (HOST, PORT))
 
-asc = astroCam()
+asc = astroCam("rasbpicam")
 print("Camera initialised, server ready")
 
 
