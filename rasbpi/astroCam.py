@@ -194,7 +194,7 @@ class pi_camera_legacy:
             }
 
 
-class astroCam(object, pi_camera_legacy):
+class astroCam(pi_camera_legacy):
 
     def __init__(self, backend, outdir="/imagetmp/"):
         if backend == "rasbpicam":
